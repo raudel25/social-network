@@ -8,6 +8,8 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"social-network-api/internal/models"
 )
 
 type Config struct {
@@ -30,12 +32,21 @@ func ConnectDatabase() {
 		log.Fatalf("Failed to connect to database!")
 	}
 
-	// err = database.AutoMigrate(&Book{})
-	// if err != nil {
-	// 	return
-	// }
+	migrationsDb(db)
 
 	DB = db
+}
+
+func migrationsDb(db *gorm.DB) {
+	migrateDb(db, &models.User{})
+
+}
+
+func migrateDb(db *gorm.DB, model interface{}) {
+	err := db.AutoMigrate(model)
+	if err != nil {
+		log.Fatalf("Error migrating: %s", err)
+	}
 }
 
 func connectionString() string {
