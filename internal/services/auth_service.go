@@ -3,25 +3,18 @@ package services
 import (
 	"net/http"
 	"regexp"
-	"social-network-api/internal/dtos"
-	"social-network-api/internal/models"
-	"social-network-api/internal/utils"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+
+	"social-network-api/internal/dtos"
+	"social-network-api/internal/models"
+	"social-network-api/internal/utils"
 )
 
 func isEmailValid(e string) bool {
 	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	return emailRegex.MatchString(e)
-}
-
-type AuthService struct {
-	db *gorm.DB
-}
-
-func NewAuthService(db *gorm.DB) *AuthService {
-	return &AuthService{db: db}
 }
 
 func HashPassword(password string) (string, error) {
@@ -32,6 +25,15 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+type AuthService struct {
+	db         *gorm.DB
+	jwtService *JWTService
+}
+
+func NewAuthService(db *gorm.DB, jwtService *JWTService) *AuthService {
+	return &AuthService{db: db, jwtService: jwtService}
 }
 
 func (s *AuthService) Register(request dtos.RegisterRequest) *utils.ApiResponse[dtos.LoginResponse] {
@@ -49,9 +51,11 @@ func (s *AuthService) Register(request dtos.RegisterRequest) *utils.ApiResponse[
 	}
 
 	hashedPassword, _ := HashPassword(request.Password)
-	s.db.Create(&models.User{Name: request.Name, Username: request.Username, Email: request.Email, Password: hashedPassword})
+	user := models.User{Name: request.Name, Username: request.Username, Email: request.Email, Password: hashedPassword}
+	s.db.Create(&user)
 
-	return utils.NewApiResponse(http.StatusOK, "Ok", &dtos.LoginResponse{Name: request.Name, Username: request.Username, Email: request.Email, Token: ""})
+	token, _ := s.jwtService.generateJWT(user.ID, user.Username)
+	return utils.NewApiResponse(http.StatusOK, "Ok", &dtos.LoginResponse{Name: request.Name, Username: request.Username, Email: request.Email, Token: token})
 }
 
 func (s *AuthService) Login(request dtos.LoginRequest) *utils.ApiResponse[dtos.LoginResponse] {
@@ -65,5 +69,6 @@ func (s *AuthService) Login(request dtos.LoginRequest) *utils.ApiResponse[dtos.L
 		return utils.NewApiResponse[dtos.LoginResponse](http.StatusUnauthorized, "Incorrect user or password", nil)
 	}
 
-	return utils.NewApiResponse(http.StatusOK, "Ok", &dtos.LoginResponse{Name: user.Name, Username: user.Username, Email: user.Email, Token: ""})
+	token, _ := s.jwtService.generateJWT(user.ID, user.Username)
+	return utils.NewApiResponse(http.StatusOK, "Ok", &dtos.LoginResponse{Name: user.Name, Username: user.Username, Email: user.Email, Token: token})
 }

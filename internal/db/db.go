@@ -1,10 +1,8 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -12,18 +10,8 @@ import (
 	"social-network-api/internal/models"
 )
 
-type Config struct {
-	Database struct {
-		Host     string `json:"Host"`
-		Port     int    `json:"Port"`
-		User     string `json:"User"`
-		Password string `json:"Password"`
-		DBName   string `json:"DBName"`
-	} `json:"Database"`
-}
-
-func ConnectDatabase() *gorm.DB {
-	dsn := connectionString()
+func ConnectDatabase(config models.Config) *gorm.DB {
+	dsn := connectionString(config)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -47,17 +35,7 @@ func migrateDb(db *gorm.DB, model interface{}) {
 	}
 }
 
-func connectionString() string {
-	jsonFile, err := os.ReadFile("config.json")
-	if err != nil {
-		log.Fatalf("Error reading file: %s", err)
-	}
-
-	var config Config
-	err = json.Unmarshal(jsonFile, &config)
-	if err != nil {
-		log.Fatalf("Error parsing JSON: %s", err)
-	}
+func connectionString(config models.Config) string {
 
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password, config.Database.DBName)

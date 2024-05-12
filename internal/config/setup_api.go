@@ -2,17 +2,20 @@ package config
 
 import (
 	"social-network-api/internal/controllers"
+	"social-network-api/internal/db"
+	"social-network-api/internal/models"
 	"social-network-api/internal/services"
 
 	"github.com/gin-gonic/gin"
-
-	"gorm.io/gorm"
 )
 
-func SetupApi(db *gorm.DB) *gin.Engine {
+func SetupApi(config models.Config) *gin.Engine {
 	r := gin.Default()
 
-	authService := services.NewAuthService(db)
+	db := db.ConnectDatabase(config)
+
+	jwtService := services.NewJwtService(config.SecretKey)
+	authService := services.NewAuthService(db, jwtService)
 
 	authRoutes(r, authService)
 
