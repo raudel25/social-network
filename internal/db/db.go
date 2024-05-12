@@ -30,6 +30,7 @@ func migrationsDb(db *gorm.DB) {
 	migrateDb(db, &models.Follow{})
 	migrateDb(db, &models.Post{})
 	migrateDb(db, &models.Message{})
+	migrateDb(db, &models.Reaction{})
 }
 
 func migrateDb(db *gorm.DB, model interface{}) {
