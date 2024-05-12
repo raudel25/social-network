@@ -14,4 +14,6 @@ type Profile struct {
 	BannerPhotoID  *uint
 	BannerPhoto    *Photo   `gorm:"foreignKey:BannerPhotoID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	RichText       RichText `gorm:"type:jsonb"`
+	Follows        []Follow `gorm:"foreignKey:FollowerProfileID"`
+	FollowedBy     []Follow `gorm:"foreignKey:FollowedProfileID"`
 }

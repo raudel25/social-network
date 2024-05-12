@@ -71,7 +71,7 @@ func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[mod
 	}
 
 	var profile models.Profile
-	s.db.Where("user_id = ?", user.ID).First(&profile)
+	s.db.Preload("Follows").Preload("FollowedBy").Where("user_id = ?", user.ID).First(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
 	return models.NewApiResponse(http.StatusOK, "Ok", &models.LoginResponse{Username: user.Username, Token: token, Profile: profile})
@@ -79,8 +79,8 @@ func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[mod
 
 func (s *AuthService) Renew(request *models.JWTDto) *models.ApiResponse[models.LoginResponse] {
 	profile := models.Profile{}
-	s.db.Preload("User").First(&profile, request.Id)
+	s.db.Preload("Follows").Preload("FollowedBy").Preload("User").First(&profile, request.Id)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, profile.User.Username)
-	return models.NewApiResponse(http.StatusOK, "Ok", &models.LoginResponse{Username: profile.User.Username, Token: token})
+	return models.NewApiResponse(http.StatusOK, "Ok", &models.LoginResponse{Username: profile.User.Username, Token: token, Profile: profile})
 }
