@@ -53,6 +53,10 @@ func NewSingleBadRequest(message string) *SingleApiResponse {
 	return &SingleApiResponse{Status: http.StatusBadRequest, Message: message, Data: nil}
 }
 
+func NewSingleNotFound(message string) *SingleApiResponse {
+	return &SingleApiResponse{Status: http.StatusNotFound, Message: message, Data: nil}
+}
+
 func NewSingleOkSingle() *SingleApiResponse {
 	return &SingleApiResponse{Status: http.StatusOK, Message: "Ok", Data: nil}
 }

@@ -38,7 +38,7 @@ func (s *PostController) NewPost(c *gin.Context) {
 		return
 	}
 
-	s.postService.NewPost(&request).Response(c)
+	s.postService.NewPost(&request,checkAuthorized.Data).Response(c)
 }
 
 func (s *PostController) MessagePost(c *gin.Context) {

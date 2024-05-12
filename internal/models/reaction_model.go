@@ -6,7 +6,7 @@ import (
 
 type Reaction struct {
 	gorm.Model
-	UserID   uint
-	User     User     `gorm:"foreignKey:UserID"`
-	PostID   uint
+	ProfileID uint
+	Profile   User `gorm:"foreignKey:ProfileID"`
+	PostID    uint
 }
