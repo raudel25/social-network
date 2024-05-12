@@ -12,6 +12,8 @@ type ApiResponse[T any] struct {
 	Data    *T
 }
 
+type SingleApiResponse = ApiResponse[interface{}]
+
 func (uc *ApiResponse[T]) Ok() bool {
 	return uc.Status == http.StatusOK
 }
@@ -39,6 +41,18 @@ func NewBadRequest[T any](message string) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusBadRequest, Message: message, Data: nil}
 }
 
-func NewOk[T any]() *ApiResponse[T] {
-	return &ApiResponse[T]{Status: http.StatusOK, Message: "", Data: nil}
+func NewOk[T any](data *T) *ApiResponse[T] {
+	return &ApiResponse[T]{Status: http.StatusOK, Message: "Ok", Data: data}
+}
+
+func NewSingleApiResponse[T any](status int, message string, data *T) *SingleApiResponse {
+	return &SingleApiResponse{Status: status, Message: message, Data: nil}
+}
+
+func NewSingleBadRequest(message string) *SingleApiResponse {
+	return &SingleApiResponse{Status: http.StatusBadRequest, Message: message, Data: nil}
+}
+
+func NewSingleOkSingle() *SingleApiResponse {
+	return &SingleApiResponse{Status: http.StatusOK, Message: "Ok", Data: nil}
 }
