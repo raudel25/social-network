@@ -1,4 +1,4 @@
-package config
+package db
 
 import (
 	"encoding/json"
@@ -22,9 +22,7 @@ type Config struct {
 	} `json:"Database"`
 }
 
-var DB *gorm.DB
-
-func ConnectDatabase() {
+func ConnectDatabase() *gorm.DB {
 	dsn := connectionString()
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
@@ -34,7 +32,7 @@ func ConnectDatabase() {
 
 	migrationsDb(db)
 
-	DB = db
+	return db
 }
 
 func migrationsDb(db *gorm.DB) {
