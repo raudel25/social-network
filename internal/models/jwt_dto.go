@@ -1,4 +1,4 @@
-package core
+package models
 
 type JWTDto struct {
 	Id       uint   `json:"id"`
