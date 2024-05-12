@@ -7,9 +7,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"social-network-api/internal/dtos"
+	"social-network-api/internal/core"
 	"social-network-api/internal/models"
-	"social-network-api/internal/utils"
 )
 
 func isEmailValid(e string) bool {
@@ -36,39 +35,47 @@ func NewAuthService(db *gorm.DB, jwtService *JWTService) *AuthService {
 	return &AuthService{db: db, jwtService: jwtService}
 }
 
-func (s *AuthService) Register(request dtos.RegisterRequest) *utils.ApiResponse[dtos.LoginResponse] {
+func (s *AuthService) Register(request core.RegisterRequest) *core.ApiResponse[core.LoginResponse] {
 
 	if s.db.Where("username =?", request.Username).First(&models.User{}).Error == nil || s.db.Where("email =?", request.Email).First(&models.User{}).Error == nil {
-		return utils.NewApiResponse[dtos.LoginResponse](http.StatusConflict, "User already exists", nil)
+		return core.NewApiResponse[core.LoginResponse](http.StatusConflict, "User already exists", nil)
 	}
 
 	if len(request.Password) < 8 {
-		return utils.NewApiResponse[dtos.LoginResponse](http.StatusBadRequest, "Password must be at least 8 characters", nil)
+		return core.NewApiResponse[core.LoginResponse](http.StatusBadRequest, "Password must be at least 8 characters", nil)
 	}
 
 	if !isEmailValid(request.Email) {
-		return utils.NewApiResponse[dtos.LoginResponse](http.StatusBadRequest, "Invalid email", nil)
+		return core.NewApiResponse[core.LoginResponse](http.StatusBadRequest, "Invalid email", nil)
 	}
 
 	hashedPassword, _ := HashPassword(request.Password)
 	user := models.User{Name: request.Name, Username: request.Username, Email: request.Email, Password: hashedPassword}
 	s.db.Create(&user)
 
-	token, _ := s.jwtService.generateJWT(user.ID, user.Username)
-	return utils.NewApiResponse(http.StatusOK, "Ok", &dtos.LoginResponse{Name: request.Name, Username: request.Username, Email: request.Email, Token: token})
+	token, _ := s.jwtService.GenerateJWT(user.ID, user.Username)
+	return core.NewApiResponse(http.StatusOK, "Ok", &core.LoginResponse{Name: request.Name, Username: request.Username, Email: request.Email, Token: token})
 }
 
-func (s *AuthService) Login(request dtos.LoginRequest) *utils.ApiResponse[dtos.LoginResponse] {
+func (s *AuthService) Login(request core.LoginRequest) *core.ApiResponse[core.LoginResponse] {
 
 	var user models.User
 	if s.db.Where("username = ? OR email = ?", request.Username, request.Username).First(&user).Error != nil {
-		return utils.NewApiResponse[dtos.LoginResponse](http.StatusNotFound, "Incorrect user or password", nil)
+		return core.NewApiResponse[core.LoginResponse](http.StatusNotFound, "Incorrect user or password", nil)
 	}
 
 	if !CheckPasswordHash(request.Password, user.Password) {
-		return utils.NewApiResponse[dtos.LoginResponse](http.StatusUnauthorized, "Incorrect user or password", nil)
+		return core.NewApiResponse[core.LoginResponse](http.StatusUnauthorized, "Incorrect user or password", nil)
 	}
 
-	token, _ := s.jwtService.generateJWT(user.ID, user.Username)
-	return utils.NewApiResponse(http.StatusOK, "Ok", &dtos.LoginResponse{Name: user.Name, Username: user.Username, Email: user.Email, Token: token})
+	token, _ := s.jwtService.GenerateJWT(user.ID, user.Username)
+	return core.NewApiResponse(http.StatusOK, "Ok", &core.LoginResponse{Name: user.Name, Username: user.Username, Email: user.Email, Token: token})
+}
+
+func (s *AuthService) Renew(request *core.JWTDto) *core.ApiResponse[core.LoginResponse] {
+	user := models.User{}
+	s.db.First(&user, request.Id)
+
+	token, _ := s.jwtService.GenerateJWT(user.ID, user.Username)
+	return core.NewApiResponse(http.StatusOK, "Ok", &core.LoginResponse{Name: user.Name, Username: user.Username, Email: user.Email, Token: token})
 }

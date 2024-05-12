@@ -15,7 +15,7 @@ func NewJwtService(secretKey string) *JWTService {
 	return &JWTService{secretKey: []byte(secretKey)}
 }
 
-func (s *JWTService) generateJWT(id uint, username string) (string, error) {
+func (s *JWTService) GenerateJWT(id uint, username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":       id,
 		"username": username,
@@ -30,7 +30,7 @@ func (s *JWTService) generateJWT(id uint, username string) (string, error) {
 	return tokenString, nil
 }
 
-func (s *JWTService) checkJWT(tokenString string) (*jwt.Token, error) {
+func (s *JWTService) CheckJWT(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -45,7 +45,7 @@ func (s *JWTService) checkJWT(tokenString string) (*jwt.Token, error) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		fmt.Println(claims)
 	} else {
-		return nil, fmt.Errorf("Invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 
 	return token, nil

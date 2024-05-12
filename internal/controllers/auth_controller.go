@@ -1,21 +1,21 @@
 package controllers
 
 import (
-	"social-network-api/internal/dtos"
+	"social-network-api/internal/core"
 	"social-network-api/internal/services"
-	"social-network-api/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
 	authService *services.AuthService
+	jwtService  *services.JWTService
 }
 
 func (s *UserController) Login(c *gin.Context) {
-	var request dtos.LoginRequest
+	var request core.LoginRequest
 
-	checkRequest := utils.CheckRequest(c, &request)
+	checkRequest := CheckRequest(c, &request)
 	if !checkRequest.Ok() {
 		checkRequest.Response(c)
 		return
@@ -26,9 +26,9 @@ func (s *UserController) Login(c *gin.Context) {
 }
 
 func (s *UserController) Register(c *gin.Context) {
-	var request dtos.RegisterRequest
+	var request core.RegisterRequest
 
-	checkRequest := utils.CheckRequest(c, &request)
+	checkRequest := CheckRequest(c, &request)
 	if !checkRequest.Ok() {
 		checkRequest.Response(c)
 		return
@@ -37,6 +37,18 @@ func (s *UserController) Register(c *gin.Context) {
 	s.authService.Register(request).Response(c)
 }
 
-func NewUserController(service *services.AuthService) *UserController {
-	return &UserController{authService: service}
+func (s *UserController) Renew(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	s.authService.Renew(checkAuthorized.Data).Response(c)
+
+}
+
+func NewUserController(authService *services.AuthService, jwtService *services.JWTService) *UserController {
+	return &UserController{authService: authService, jwtService: jwtService}
 }
