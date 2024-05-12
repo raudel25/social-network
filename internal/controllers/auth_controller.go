@@ -1,15 +1,54 @@
 package controllers
 
 import (
+	"social-network-api/internal/core"
+	"social-network-api/internal/services"
+
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-func Login(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-        "message": "¡Hola! Estoy haciendo inicio de sesión.",
-    })
+type UserController struct {
+	authService *services.AuthService
+	jwtService  *services.JWTService
 }
 
-func Register(c *gin.Context) {
+func (s *UserController) Login(c *gin.Context) {
+	var request core.LoginRequest
+
+	checkRequest := CheckRequest(c, &request)
+	if !checkRequest.Ok() {
+		checkRequest.Response(c)
+		return
+	}
+
+	s.authService.Login(request).Response(c)
+
+}
+
+func (s *UserController) Register(c *gin.Context) {
+	var request core.RegisterRequest
+
+	checkRequest := CheckRequest(c, &request)
+	if !checkRequest.Ok() {
+		checkRequest.Response(c)
+		return
+	}
+
+	s.authService.Register(request).Response(c)
+}
+
+func (s *UserController) Renew(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	s.authService.Renew(checkAuthorized.Data).Response(c)
+
+}
+
+func NewUserController(authService *services.AuthService, jwtService *services.JWTService) *UserController {
+	return &UserController{authService: authService, jwtService: jwtService}
 }
