@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	portPtr := flag.Int("port", 8080, "Default port is 8080")
+	portPtr := flag.Int("port", 5000, "Default port is 8080")
 	flag.Parse()
 
 	db := db.ConnectDatabase()

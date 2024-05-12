@@ -24,5 +24,5 @@ func authRoutes(r *gin.Engine, service *services.AuthService) {
 	auth := r.Group("/auth")
 
 	auth.POST("/login", controller.Login)
-	auth.POST("/register", controller.Login)
+	auth.POST("/register", controller.Register)
 }
