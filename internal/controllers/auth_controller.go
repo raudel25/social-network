@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"social-network-api/internal/core"
+	"social-network-api/internal/models"
 	"social-network-api/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +13,7 @@ type UserController struct {
 }
 
 func (s *UserController) Login(c *gin.Context) {
-	var request core.LoginRequest
+	var request models.LoginRequest
 
 	checkRequest := CheckRequest(c, &request)
 	if !checkRequest.Ok() {
@@ -26,7 +26,7 @@ func (s *UserController) Login(c *gin.Context) {
 }
 
 func (s *UserController) Register(c *gin.Context) {
-	var request core.RegisterRequest
+	var request models.RegisterRequest
 
 	checkRequest := CheckRequest(c, &request)
 	if !checkRequest.Ok() {

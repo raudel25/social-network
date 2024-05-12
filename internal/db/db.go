@@ -25,7 +25,8 @@ func ConnectDatabase(config models.Config) *gorm.DB {
 
 func migrationsDb(db *gorm.DB) {
 	migrateDb(db, &models.User{})
-
+	migrateDb(db, &models.Profile{})
+	migrateDb(db, &models.Photo{})
 }
 
 func migrateDb(db *gorm.DB, model interface{}) {
