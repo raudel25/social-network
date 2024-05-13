@@ -114,7 +114,6 @@ func (s *ProfileService) GetByRecommendation(pagination *pkg.Pagination, jwt *mo
 	return pkg.NewOk(pagination)
 }
 
-
 func (s *ProfileService) GetByID(id uint, jwt *models.JWTDto) *pkg.ApiResponse[models.ProfileResponse] {
 	var profile models.Profile
 	if s.db.Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile, id).Error != nil {

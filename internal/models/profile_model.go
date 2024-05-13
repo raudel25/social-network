@@ -16,7 +16,5 @@ type Profile struct {
 	RichText       RichText   `gorm:"type:jsonb"`
 	Follows        []Follow   `gorm:"foreignKey:FollowerProfileID"`
 	FollowedBy     []Follow   `gorm:"foreignKey:FollowedProfileID"`
-	Messages       []Message  `gorm:"foreignKey:PostID"`
-	Reactions      []Reaction `gorm:"foreignKey:PostID"`
 }
 

@@ -41,6 +41,7 @@ func postRoutes(r *gin.Engine, postService *services.PostService, jwtService *se
 
 	post.POST("", controller.NewPost)
 	post.GET("", controller.GetPost)
+	post.GET("/user/:id", controller.GetPostsByUser)
 	post.POST("/message/:id", controller.MessagePost)
 	post.POST("/reaction/:id", controller.ReactionPost)
 }

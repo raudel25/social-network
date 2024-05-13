@@ -11,6 +11,51 @@ type PostService struct {
 	db *gorm.DB
 }
 
+func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
+	reaction := false
+
+	for _, v := range post.Reactions {
+		if v.Profile.ID == id {
+			reaction = true
+		}
+	}
+
+	var rePost *models.PostResponse
+	if post.RePost != nil {
+		rePost = postToResponsePost(id, post.RePost)
+	}
+
+	return &models.PostResponse{
+		Title:         post.Title,
+		Profile:       *profileToResponseProfile(id, &post.Profile),
+		Photo:         post.Photo,
+		RichText:      post.RichText,
+		Reaction:      reaction,
+		CantReactions: len(post.Reactions),
+		CantMessages:  len(post.Messages),
+		RePost:        rePost,
+		Date:          post.CreatedAt,
+	}
+}
+
+func (s *PostService) GetPostsByUser(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+	var posts []models.Post
+	pagination.Count(s.db.Where("profile_id =?", id).Model(&models.Post{}))
+
+	s.db.Where("profile_id =?", id).Scopes(pagination.Paginate).
+		Preload("Reactions").Preload("Messages").Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").Find(&posts)
+
+	var response []models.PostResponse
+
+	for _, v := range posts {
+		response = append(response, *postToResponsePost(jwt.ID, &v))
+	}
+
+	pagination.Rows = response
+
+	return pkg.NewOk(pagination)
+}
+
 func (s *PostService) NewPost(request *models.PostRequest, jwt *models.JWTDto) *pkg.SingleApiResponse {
 	if request.PhotoID != nil && s.db.First(&models.Photo{}, request.PhotoID).Error != nil {
 		return pkg.NewSingleNotFound("Photo not found")

@@ -22,6 +22,29 @@ func (s *PostController) GetPost(c *gin.Context) {
 
 }
 
+func (s *PostController) GetPostsByUser(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	checkPagination := CheckPagination(c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	s.postService.GetPostsByUser(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
 func (s *PostController) NewPost(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 
@@ -38,7 +61,7 @@ func (s *PostController) NewPost(c *gin.Context) {
 		return
 	}
 
-	s.postService.NewPost(&request,checkAuthorized.Data).Response(c)
+	s.postService.NewPost(&request, checkAuthorized.Data).Response(c)
 }
 
 func (s *PostController) MessagePost(c *gin.Context) {
