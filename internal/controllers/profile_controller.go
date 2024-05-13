@@ -20,7 +20,13 @@ func (s *ProfileController) GetByRecommendation(c *gin.Context) {
 		return
 	}
 
-	s.profileService.GetByRecommendation(checkAuthorized.Data).Response(c)
+	checkPagination := CheckPagination(c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	s.profileService.GetByRecommendation(checkPagination.Data, checkAuthorized.Data).Response(c)
 }
 
 func (s *ProfileController) GetByFollowed(c *gin.Context) {
@@ -37,7 +43,13 @@ func (s *ProfileController) GetByFollowed(c *gin.Context) {
 		return
 	}
 
-	s.profileService.GetByFollowed(*idRequest.Data, checkAuthorized.Data).Response(c)
+	checkPagination := CheckPagination(c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	s.profileService.GetByFollowed(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
 }
 
 func (s *ProfileController) GetByFollower(c *gin.Context) {
@@ -54,7 +66,13 @@ func (s *ProfileController) GetByFollower(c *gin.Context) {
 		return
 	}
 
-	s.profileService.GetByFollower(*idRequest.Data, checkAuthorized.Data).Response(c)
+	checkPagination := CheckPagination(c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	s.profileService.GetByFollower(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
 }
 
 func (s *ProfileController) GetByID(c *gin.Context) {

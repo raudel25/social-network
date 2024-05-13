@@ -32,12 +32,17 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 	}
 }
 
-func (s *ProfileService) GetByFollowed(id uint, jwt *models.JWTDto) *pkg.ApiResponse[[]models.ProfileResponse] {
+func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
 	var followerProfiles []models.Profile
+
+	pagination.Count(s.db.Table("follows").Select("*").
+		Joins("join profiles on follows.follower_profile_id = profiles.id").
+		Where("follows.followed_profile_id =?", id))
 
 	s.db.Table("follows").Select("*").
 		Joins("join profiles on follows.follower_profile_id = profiles.id").
-		Where("follows.followed_profile_id =?", id).Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").
+		Where("follows.followed_profile_id =?", id).Scopes(pagination.Paginate).
+		Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").
 		Find(&followerProfiles)
 
 	var profiles []models.ProfileResponse
@@ -46,15 +51,23 @@ func (s *ProfileService) GetByFollowed(id uint, jwt *models.JWTDto) *pkg.ApiResp
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
-	return pkg.NewOk(&profiles)
+	pagination.Rows = profiles
+
+	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByFollower(id uint, jwt *models.JWTDto) *pkg.ApiResponse[[]models.ProfileResponse] {
+func (s *ProfileService) GetByFollower(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
 	var followedProfiles []models.Profile
+
+	pagination.Count(s.db.Table("follows").Select("*").
+		Joins("join profiles on follows.followed_profile_id = profiles.id").
+		Where("follows.follower_profile_id =?", id))
 
 	s.db.Table("follows").Select("*").
 		Joins("join profiles on follows.followed_profile_id = profiles.id").
-		Where("follows.follower_profile_id =?", id).Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").
+		Where("follows.follower_profile_id =?", id).
+		Scopes(pagination.Paginate).
+		Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").
 		Find(&followedProfiles)
 
 	var profiles []models.ProfileResponse
@@ -63,10 +76,12 @@ func (s *ProfileService) GetByFollower(id uint, jwt *models.JWTDto) *pkg.ApiResp
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
-	return pkg.NewOk(&profiles)
+	pagination.Rows = profiles
+
+	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *pkg.ApiResponse[[]models.ProfileResponse] {
+func (s *ProfileService) GetByRecommendation(pagination *pkg.Pagination, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
 	var recommendationProfiles []models.Profile
 
 	query := fmt.Sprintf(`
@@ -84,7 +99,8 @@ func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *pkg.ApiRespons
 	) as f
 	JOIN profiles ON f.id=profiles.id`, jwt.ID, jwt.ID, jwt.ID)
 
-	s.db.Raw(query).Scan(&recommendationProfiles)
+	pagination.CountRaw(s.db, query)
+	s.db.Raw(query).Scopes(pagination.Paginate).Scan(&recommendationProfiles)
 
 	var profiles []models.ProfileResponse
 
@@ -93,22 +109,11 @@ func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *pkg.ApiRespons
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
-	return pkg.NewOk(&profiles)
+	pagination.Rows = profiles
+
+	return pkg.NewOk(pagination)
 }
 
-// func (s *ProfileService) GetByName(name string, jwt *models.JWTDto) *models.ApiResponse[[]models.ProfileResponse] {
-// 	var nameProfiles []models.Profile
-
-// 	s.db.Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").Where("name =?", name).Find(&nameProfiles)
-
-// 	var profiles []models.ProfileResponse
-
-// 	for _, v := range nameProfiles {
-// 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
-// 	}
-
-// 	return models.NewOk(&profiles)
-// }
 
 func (s *ProfileService) GetByID(id uint, jwt *models.JWTDto) *pkg.ApiResponse[models.ProfileResponse] {
 	var profile models.Profile
