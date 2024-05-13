@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"social-network-api/internal/models"
+	"social-network-api/internal/pkg"
 
 	"gorm.io/gorm"
 )
@@ -27,11 +28,11 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 		BannerPhoto:  profile.BannerPhoto,
 		RichText:     profile.RichText,
 		Follow:       follow,
-		// Username:     profile.User.Username,
+		Username:     profile.User.Username,
 	}
 }
 
-func (s *ProfileService) GetByFollowed(id uint, jwt *models.JWTDto) *models.ApiResponse[[]models.ProfileResponse] {
+func (s *ProfileService) GetByFollowed(id uint, jwt *models.JWTDto) *pkg.ApiResponse[[]models.ProfileResponse] {
 	var followerProfiles []models.Profile
 
 	s.db.Table("follows").Select("*").
@@ -45,10 +46,10 @@ func (s *ProfileService) GetByFollowed(id uint, jwt *models.JWTDto) *models.ApiR
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
-	return models.NewOk(&profiles)
+	return pkg.NewOk(&profiles)
 }
 
-func (s *ProfileService) GetByFollower(id uint, jwt *models.JWTDto) *models.ApiResponse[[]models.ProfileResponse] {
+func (s *ProfileService) GetByFollower(id uint, jwt *models.JWTDto) *pkg.ApiResponse[[]models.ProfileResponse] {
 	var followedProfiles []models.Profile
 
 	s.db.Table("follows").Select("*").
@@ -62,10 +63,10 @@ func (s *ProfileService) GetByFollower(id uint, jwt *models.JWTDto) *models.ApiR
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
-	return models.NewOk(&profiles)
+	return pkg.NewOk(&profiles)
 }
 
-func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *models.ApiResponse[[]models.ProfileResponse] {
+func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *pkg.ApiResponse[[]models.ProfileResponse] {
 	var recommendationProfiles []models.Profile
 
 	query := fmt.Sprintf(`
@@ -83,16 +84,16 @@ func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *models.ApiResp
 	) as f
 	JOIN profiles ON f.id=profiles.id`, jwt.ID, jwt.ID, jwt.ID)
 
-	s.db.Raw(query).Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").Scan(&recommendationProfiles)
+	s.db.Raw(query).Scan(&recommendationProfiles)
 
-	println(len(recommendationProfiles))
 	var profiles []models.ProfileResponse
 
 	for _, v := range recommendationProfiles {
+		s.db.Preload("User").Preload("FollowedBy").Preload("ProfilePhoto").Preload("BannerPhoto").Find(&v, v.ID)
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
-	return models.NewOk(&profiles)
+	return pkg.NewOk(&profiles)
 }
 
 // func (s *ProfileService) GetByName(name string, jwt *models.JWTDto) *models.ApiResponse[[]models.ProfileResponse] {
@@ -109,27 +110,27 @@ func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *models.ApiResp
 // 	return models.NewOk(&profiles)
 // }
 
-func (s *ProfileService) GetByID(id uint, jwt *models.JWTDto) *models.ApiResponse[models.ProfileResponse] {
+func (s *ProfileService) GetByID(id uint, jwt *models.JWTDto) *pkg.ApiResponse[models.ProfileResponse] {
 	var profile models.Profile
 	if s.db.Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile, id).Error != nil {
-		return models.NewNotFound[models.ProfileResponse]("Profile not found")
+		return pkg.NewNotFound[models.ProfileResponse]("Profile not found")
 	}
 
-	return models.NewOk(profileToResponseProfile(jwt.ID, &profile))
+	return pkg.NewOk(profileToResponseProfile(jwt.ID, &profile))
 }
 
-func (s *ProfileService) EditProfile(request *models.ProfileRequest, jwt *models.JWTDto) *models.SingleApiResponse {
+func (s *ProfileService) EditProfile(request *models.ProfileRequest, jwt *models.JWTDto) *pkg.SingleApiResponse {
 	if request.ProfilePhotoID != nil && s.db.First(&models.Photo{}, request.ProfilePhotoID).Error != nil {
-		return models.NewSingleNotFound("Profile photo not found")
+		return pkg.NewSingleNotFound("Profile photo not found")
 	}
 
 	if request.BannerPhotoID != nil && s.db.First(&models.Photo{}, request.BannerPhotoID).Error != nil {
-		return models.NewSingleNotFound("Banner photo not found")
+		return pkg.NewSingleNotFound("Banner photo not found")
 	}
 
 	var profile models.Profile
 	if s.db.Find(&profile, jwt.ID).Error != nil {
-		return models.NewSingleNotFound("Profile not found")
+		return pkg.NewSingleNotFound("Profile not found")
 	}
 
 	profile.Name = request.Name
@@ -139,12 +140,12 @@ func (s *ProfileService) EditProfile(request *models.ProfileRequest, jwt *models
 
 	s.db.Where("id =?", jwt.ID).Updates(&profile)
 
-	return models.NewSingleOkSingle()
+	return pkg.NewSingleOkSingle()
 }
 
-func (s *ProfileService) FollowUnFollow(id uint, jwt *models.JWTDto) *models.SingleApiResponse {
+func (s *ProfileService) FollowUnFollow(id uint, jwt *models.JWTDto) *pkg.SingleApiResponse {
 	if s.db.First(&models.Profile{}, id).Error != nil {
-		return models.NewSingleNotFound("Profile not found")
+		return pkg.NewSingleNotFound("Profile not found")
 	}
 
 	if s.db.Where("follower_id =? AND followed_id =?", jwt.ID, id).First(&models.Follow{}).Error != nil {
@@ -153,7 +154,7 @@ func (s *ProfileService) FollowUnFollow(id uint, jwt *models.JWTDto) *models.Sin
 		s.db.Where("follower_id =? AND followed_id =?", jwt.ID, id).Delete(&models.Follow{})
 	}
 
-	return models.NewSingleOkSingle()
+	return pkg.NewSingleOkSingle()
 }
 
 func NewProfileService(db *gorm.DB) *ProfileService {

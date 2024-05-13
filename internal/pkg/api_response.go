@@ -1,4 +1,4 @@
-package models
+package pkg
 
 import (
 	"net/http"
@@ -44,7 +44,6 @@ func NewBadRequest[T any](message string) *ApiResponse[T] {
 func NewNotFound[T any](message string) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusNotFound, Message: message, Data: nil}
 }
-
 
 func NewOk[T any](data *T) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusOK, Message: "Ok", Data: data}

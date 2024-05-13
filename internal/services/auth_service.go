@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"social-network-api/internal/models"
+	"social-network-api/internal/pkg"
 )
 
 func isEmailValid(e string) bool {
@@ -46,25 +47,25 @@ func NewAuthService(db *gorm.DB, jwtService *JWTService) *AuthService {
 	return &AuthService{db: db, jwtService: jwtService}
 }
 
-func (s *AuthService) Register(request models.RegisterRequest) *models.ApiResponse[models.LoginResponse] {
+func (s *AuthService) Register(request models.RegisterRequest) *pkg.ApiResponse[models.LoginResponse] {
 	if s.db.Where("username =?", request.Username).First(&models.User{}).Error == nil || s.db.Where("email =?", request.Email).First(&models.User{}).Error == nil {
-		return models.NewApiResponse[models.LoginResponse](http.StatusConflict, "User already exists", nil)
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusConflict, "User already exists", nil)
 	}
 
 	if len(request.Password) < 8 {
-		return models.NewApiResponse[models.LoginResponse](http.StatusBadRequest, "Password must be at least 8 characters", nil)
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusBadRequest, "Password must be at least 8 characters", nil)
 	}
 
 	if !isEmailValid(request.Email) {
-		return models.NewApiResponse[models.LoginResponse](http.StatusBadRequest, "Invalid email", nil)
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusBadRequest, "Invalid email", nil)
 	}
 
 	if request.Profile.ProfilePhotoID != nil && s.db.First(&models.Photo{}, request.Profile.ProfilePhotoID).Error != nil {
-		return models.NewNotFound[models.LoginResponse]("Profile photo not found")
+		return pkg.NewNotFound[models.LoginResponse]("Profile photo not found")
 	}
 
 	if request.Profile.BannerPhotoID != nil && s.db.First(&models.Photo{}, request.Profile.BannerPhotoID).Error != nil {
-		return models.NewNotFound[models.LoginResponse]("Banner photo not found")
+		return pkg.NewNotFound[models.LoginResponse]("Banner photo not found")
 	}
 
 	hashedPassword, _ := HashPassword(request.Password)
@@ -75,18 +76,18 @@ func (s *AuthService) Register(request models.RegisterRequest) *models.ApiRespon
 	s.db.Create(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
-	return models.NewOk(&models.LoginResponse{Username: request.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
+	return pkg.NewOk(&models.LoginResponse{Username: request.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
 }
 
-func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[models.LoginResponse] {
+func (s *AuthService) Login(request models.LoginRequest) *pkg.ApiResponse[models.LoginResponse] {
 
 	var user models.User
 	if s.db.Where("username = ? OR email = ?", request.Username, request.Username).First(&user).Error != nil {
-		return models.NewApiResponse[models.LoginResponse](http.StatusNotFound, "Incorrect user or password", nil)
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusNotFound, "Incorrect user or password", nil)
 	}
 
 	if !CheckPasswordHash(request.Password, user.Password) {
-		return models.NewApiResponse[models.LoginResponse](http.StatusUnauthorized, "Incorrect user or password", nil)
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusUnauthorized, "Incorrect user or password", nil)
 	}
 
 	var profile models.Profile
@@ -94,13 +95,13 @@ func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[mod
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
 
-	return models.NewOk(&models.LoginResponse{Username: user.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
+	return pkg.NewOk(&models.LoginResponse{Username: user.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
 }
 
-func (s *AuthService) Renew(request *models.JWTDto) *models.ApiResponse[models.LoginResponse] {
+func (s *AuthService) Renew(request *models.JWTDto) *pkg.ApiResponse[models.LoginResponse] {
 	profile := models.Profile{}
 	s.db.Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile, request.ID)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, profile.User.Username)
-	return models.NewOk(&models.LoginResponse{Username: profile.User.Username, Token: token, Profile: *profileToResponseAuth(&profile, profile.User.Username)})
+	return pkg.NewOk(&models.LoginResponse{Username: profile.User.Username, Token: token, Profile: *profileToResponseAuth(&profile, profile.User.Username)})
 }
