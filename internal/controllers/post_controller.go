@@ -20,6 +20,13 @@ func (s *PostController) GetPost(c *gin.Context) {
 		return
 	}
 
+	checkPagination := CheckPagination(c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	s.postService.GetByRecommendationPost(checkPagination.Data, checkAuthorized.Data).Response(c)
 }
 
 func (s *PostController) GetPostsByUser(c *gin.Context) {

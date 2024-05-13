@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"social-network-api/internal/models"
 	"social-network-api/internal/pkg"
 
@@ -38,12 +39,41 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	}
 }
 
+func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+	var recommendationPosts []models.Post
+
+	query := fmt.Sprintf(`
+	SELECT *
+	FROM posts
+	WHERE 
+	EXISTS (SELECT 1 FROM follows WHERE follower_profile_id=%d AND followed_profile_id = profile_id)
+	AND 
+	NOT EXISTS (SELECT * FROM seen_posts WHERE profile_id=%d AND created_at < now() - interval '24 hours')`,
+		jwt.ID, jwt.ID)
+
+	pagination.CountRaw(s.db, query)
+	s.db.Raw(query).Scopes(pagination.Paginate).Scan(&recommendationPosts)
+
+	var posts []models.PostResponse
+
+	for _, v := range recommendationPosts {
+		s.db.Preload("Reactions").Preload("Messages").Preload("Profile").
+			Preload("Profile.User").Preload("Profile.FollowedBy").Find(&v, v.ID)
+		posts = append(posts, *postToResponsePost(jwt.ID, &v))
+	}
+
+	pagination.Rows = posts
+
+	return pkg.NewOk(pagination)
+}
+
 func (s *PostService) GetPostsByUser(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
 	var posts []models.Post
 	pagination.Count(s.db.Where("profile_id =?", id).Model(&models.Post{}))
 
 	s.db.Where("profile_id =?", id).Scopes(pagination.Paginate).
-		Preload("Reactions").Preload("Messages").Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").Find(&posts)
+		Preload("Reactions").Preload("Messages").Preload("Profile").
+		Preload("Profile.User").Preload("Profile.FollowedBy").Find(&posts)
 
 	var response []models.PostResponse
 

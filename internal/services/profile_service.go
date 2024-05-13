@@ -81,7 +81,7 @@ func (s *ProfileService) GetByFollower(pagination *pkg.Pagination, id uint, jwt 
 	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByRecommendation(pagination *pkg.Pagination, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
 	var recommendationProfiles []models.Profile
 
 	query := fmt.Sprintf(`

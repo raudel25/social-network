@@ -50,10 +50,10 @@ func profileRoutes(r *gin.Engine, profileService *services.ProfileService, jwtSe
 	controller := controllers.NewProfileController(profileService, jwtService)
 	post := r.Group("/profile")
 
+	post.GET("", controller.GetProfiles)
 	post.GET("/:id", controller.GetByID)
 	post.GET("/followed/:id", controller.GetByFollowed)
 	post.GET("/follower/:id", controller.GetByFollower)
-	post.GET("/recommendation", controller.GetByRecommendation)
 	post.PUT("", controller.EditProfile)
 	post.POST("/followUnFollow/:id", controller.FollowUnFollow)
 }
