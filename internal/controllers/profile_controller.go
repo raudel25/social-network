@@ -12,6 +12,17 @@ type ProfileController struct {
 	profileService *services.ProfileService
 }
 
+func (s *ProfileController) GetByRecommendation(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	s.profileService.GetByRecommendation(checkAuthorized.Data).Response(c)
+}
+
 func (s *ProfileController) GetByFollowed(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 

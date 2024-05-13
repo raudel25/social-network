@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"social-network-api/internal/models"
 
 	"gorm.io/gorm"
@@ -26,7 +27,7 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 		BannerPhoto:  profile.BannerPhoto,
 		RichText:     profile.RichText,
 		Follow:       follow,
-		Username:     profile.User.Username,
+		// Username:     profile.User.Username,
 	}
 }
 
@@ -58,6 +59,36 @@ func (s *ProfileService) GetByFollower(id uint, jwt *models.JWTDto) *models.ApiR
 	var profiles []models.ProfileResponse
 
 	for _, v := range followedProfiles {
+		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
+	}
+
+	return models.NewOk(&profiles)
+}
+
+func (s *ProfileService) GetByRecommendation(jwt *models.JWTDto) *models.ApiResponse[[]models.ProfileResponse] {
+	var recommendationProfiles []models.Profile
+
+	query := fmt.Sprintf(`
+	SELECT *
+	FROM (
+		SELECT f.followed_profile_id AS id  
+		FROM follows as f
+		WHERE 
+		EXISTS (SELECT 1 FROM follows WHERE follower_profile_id=%d AND followed_profile_id = f.follower_profile_id)
+		AND
+		NOT EXISTS (SELECT 1 FROM follows WHERE follower_profile_id=%d AND followed_profile_id = f.followed_profile_id)
+		AND
+		f.followed_profile_id <> %d
+		ORDER BY f.followed_profile_id DESC
+	) as f
+	JOIN profiles ON f.id=profiles.id`, jwt.ID, jwt.ID, jwt.ID)
+
+	s.db.Raw(query).Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").Scan(&recommendationProfiles)
+
+	println(len(recommendationProfiles))
+	var profiles []models.ProfileResponse
+
+	for _, v := range recommendationProfiles {
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 

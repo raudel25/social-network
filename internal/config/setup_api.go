@@ -52,6 +52,7 @@ func profileRoutes(r *gin.Engine, profileService *services.ProfileService, jwtSe
 	post.GET("/:id", controller.GetByID)
 	post.GET("/followed/:id", controller.GetByFollowed)
 	post.GET("/follower/:id", controller.GetByFollower)
+	post.GET("/recommendation", controller.GetByRecommendation)
 	post.PUT("", controller.EditProfile)
 	post.POST("/followUnFollow/:id", controller.FollowUnFollow)
 }

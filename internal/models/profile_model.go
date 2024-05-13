@@ -19,3 +19,4 @@ type Profile struct {
 	Messages       []Message  `gorm:"foreignKey:PostID"`
 	Reactions      []Reaction `gorm:"foreignKey:PostID"`
 }
+
