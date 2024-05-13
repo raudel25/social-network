@@ -41,11 +41,16 @@ func NewBadRequest[T any](message string) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusBadRequest, Message: message, Data: nil}
 }
 
+func NewBadNotFound[T any](message string) *ApiResponse[T] {
+	return &ApiResponse[T]{Status: http.StatusNotFound, Message: message, Data: nil}
+}
+
+
 func NewOk[T any](data *T) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusOK, Message: "Ok", Data: data}
 }
 
-func NewSingleApiResponse[T any](status int, message string, data *T) *SingleApiResponse {
+func NewSingleApiResponse(status int, message string) *SingleApiResponse {
 	return &SingleApiResponse{Status: status, Message: message, Data: nil}
 }
 

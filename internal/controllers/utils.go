@@ -30,7 +30,7 @@ func CheckAuthorized(c *gin.Context, jwt_service *services.JWTService) *models.A
 		return models.NewApiResponse[models.JWTDto](http.StatusUnauthorized, "Invalid token", nil)
 	}
 
-	return models.NewApiResponse[models.JWTDto](http.StatusOK, "", &models.JWTDto{Id: uint(claims["id"].(float64)), Username: claims["username"].(string)})
+	return models.NewApiResponse[models.JWTDto](http.StatusOK, "", &models.JWTDto{ID: uint(claims["id"].(float64)), Username: claims["username"].(string)})
 }
 
 func CheckId(c *gin.Context) *models.ApiResponse[uint] {

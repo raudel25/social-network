@@ -35,7 +35,6 @@ func NewAuthService(db *gorm.DB, jwtService *JWTService) *AuthService {
 }
 
 func (s *AuthService) Register(request models.RegisterRequest) *models.ApiResponse[models.LoginResponse] {
-
 	if s.db.Where("username =?", request.Username).First(&models.User{}).Error == nil || s.db.Where("email =?", request.Email).First(&models.User{}).Error == nil {
 		return models.NewApiResponse[models.LoginResponse](http.StatusConflict, "User already exists", nil)
 	}
@@ -48,11 +47,19 @@ func (s *AuthService) Register(request models.RegisterRequest) *models.ApiRespon
 		return models.NewApiResponse[models.LoginResponse](http.StatusBadRequest, "Invalid email", nil)
 	}
 
+	if request.Profile.ProfilePhotoID != nil && s.db.First(&models.Photo{}, request.Profile.ProfilePhotoID).Error != nil {
+		return models.NewBadNotFound[models.LoginResponse]("Profile photo not found")
+	}
+
+	if request.Profile.BannerPhotoID != nil && s.db.First(&models.Photo{}, request.Profile.BannerPhotoID).Error != nil {
+		return models.NewBadNotFound[models.LoginResponse]("Banner photo not found")
+	}
+
 	hashedPassword, _ := HashPassword(request.Password)
 	user := models.User{Username: request.Username, Email: request.Email, Password: hashedPassword}
 	s.db.Create(&user)
 
-	profile := models.Profile{UserID: user.ID, Name: request.Name, ProfilePhotoID: request.ProfilePhotoID, BannerPhotoID: request.BannerPhotoID, RichText: request.RichText}
+	profile := models.Profile{UserID: user.ID, Name: request.Name, ProfilePhotoID: request.Profile.ProfilePhotoID, BannerPhotoID: request.Profile.BannerPhotoID, RichText: request.Profile.RichText}
 	s.db.Create(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
@@ -71,7 +78,7 @@ func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[mod
 	}
 
 	var profile models.Profile
-	s.db.Preload("Follows").Preload("FollowedBy").Where("user_id = ?", user.ID).First(&profile)
+	s.db.Where("user_id = ?", user.ID).First(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
 	return models.NewOk(&models.LoginResponse{Username: user.Username, Token: token, Profile: profile})
@@ -79,7 +86,7 @@ func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[mod
 
 func (s *AuthService) Renew(request *models.JWTDto) *models.ApiResponse[models.LoginResponse] {
 	profile := models.Profile{}
-	s.db.Preload("Follows").Preload("FollowedBy").Preload("User").First(&profile, request.ID)
+	s.db.Preload("User").First(&profile, request.ID)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, profile.User.Username)
 	return models.NewOk(&models.LoginResponse{Username: profile.User.Username, Token: token, Profile: profile})

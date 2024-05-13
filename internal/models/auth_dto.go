@@ -1,13 +1,11 @@
 package models
 
 type RegisterRequest struct {
-	Name           string   `json:"name" binding:"required"`
-	Username       string   `json:"username" binding:"required"`
-	Email          string   `json:"email" binding:"required"`
-	Password       string   `json:"password" binding:"required"`
-	ProfilePhotoID *uint    `json:"profile_photo_id"`
-	BannerPhotoID  *uint    `json:"banner_photo_id"`
-	RichText       RichText `json:"rich_text" binding:"required"`
+	Name     string     `json:"name" binding:"required"`
+	Username string     `json:"username" binding:"required"`
+	Email    string     `json:"email" binding:"required"`
+	Password string     `json:"password" binding:"required"`
+	Profile  ProfileDto `json:"profile" binding:"required"`
 }
 
 type LoginResponse struct {
