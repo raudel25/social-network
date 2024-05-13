@@ -17,9 +17,11 @@ func SetupApi(config models.Config) *gin.Engine {
 	jwtService := services.NewJwtService(config.SecretKey)
 	authService := services.NewAuthService(db, jwtService)
 	postService := services.NewPostService(db)
+	profileService := services.NewProfileService(db)
 
 	authRoutes(r, authService, jwtService)
 	postRoutes(r, postService, jwtService)
+	profileRoutes(r, profileService, jwtService)
 
 	return r
 }
@@ -41,4 +43,14 @@ func postRoutes(r *gin.Engine, postService *services.PostService, jwtService *se
 	post.GET("", controller.GetPost)
 	post.POST("/message/:id", controller.MessagePost)
 	post.POST("/reaction/:id", controller.ReactionPost)
+}
+
+func profileRoutes(r *gin.Engine, profileService *services.ProfileService, jwtService *services.JWTService) {
+	controller := controllers.NewProfileController(profileService, jwtService)
+	post := r.Group("/profile")
+
+	post.PUT("", controller.EditProfile)
+	// post.GET("", controller.GetPost)
+	// post.POST("/message/:id", controller.MessagePost)
+	post.POST("/followUnFollow/:id", controller.FollowUnFollow)
 }
