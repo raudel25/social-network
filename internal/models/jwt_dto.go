@@ -1,6 +1,6 @@
 package models
 
 type JWTDto struct {
-	Id       uint   `json:"id"`
+	ID       uint   `json:"id"`
 	Username string `json:"username"`
 }

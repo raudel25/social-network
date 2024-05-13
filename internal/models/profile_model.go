@@ -8,7 +8,7 @@ type Profile struct {
 	gorm.Model
 	Name           string
 	UserID         uint
-	User           User `gorm:"foreignKey:UserID"`
+	User           *User `gorm:"foreignKey:UserID"`
 	ProfilePhotoID *uint
 	ProfilePhoto   *Photo `gorm:"foreignKey:ProfilePhotoID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	BannerPhotoID  *uint
@@ -19,3 +19,4 @@ type Profile struct {
 	Messages       []Message  `gorm:"foreignKey:PostID"`
 	Reactions      []Reaction `gorm:"foreignKey:PostID"`
 }
+

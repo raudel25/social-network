@@ -6,8 +6,8 @@ import (
 
 type Message struct {
 	gorm.Model
-	UserID   uint
-	User     User     `gorm:"foreignKey:UserID"`
+	ProfileID   uint
+	Profile     User     `gorm:"foreignKey:ProfileID"`
 	RichText RichText `gorm:"type:jsonb"`
 	PostID   uint
 }
