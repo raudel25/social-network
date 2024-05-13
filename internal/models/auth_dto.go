@@ -5,12 +5,12 @@ type RegisterRequest struct {
 	Username string     `json:"username" binding:"required"`
 	Email    string     `json:"email" binding:"required"`
 	Password string     `json:"password" binding:"required"`
-	Profile  ProfileDto `json:"profile" binding:"required"`
+	Profile  ProfileRequest `json:"profile" binding:"required"`
 }
 
 type LoginResponse struct {
 	Username string  `json:"username" binding:"required"`
-	Profile  Profile `json:"profile" binding:"required"`
+	Profile  ProfileResponse `json:"profile" binding:"required"`
 	Token    string  `json:"token" binding:"required"`
 }
 

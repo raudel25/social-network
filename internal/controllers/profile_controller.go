@@ -12,6 +12,57 @@ type ProfileController struct {
 	profileService *services.ProfileService
 }
 
+func (s *ProfileController) GetByFollowed(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	s.profileService.GetByFollowed(*idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
+func (s *ProfileController) GetByFollower(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	s.profileService.GetByFollower(*idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
+func (s *ProfileController) GetByID(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	s.profileService.GetByID(*idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
 func (s *ProfileController) EditProfile(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 
@@ -20,7 +71,7 @@ func (s *ProfileController) EditProfile(c *gin.Context) {
 		return
 	}
 
-	var request models.ProfileDto
+	var request models.ProfileRequest
 
 	checkRequest := CheckRequest(c, &request)
 	if !checkRequest.Ok() {

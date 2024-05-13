@@ -25,6 +25,18 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
+func profileToResponseAuth(profile *models.Profile, username string) *models.ProfileResponse {
+	return &models.ProfileResponse{
+		ID:           profile.ID,
+		Name:         profile.Name,
+		ProfilePhoto: profile.ProfilePhoto,
+		BannerPhoto:  profile.BannerPhoto,
+		RichText:     profile.RichText,
+		Follow:       false,
+		Username:     username,
+	}
+}
+
 type AuthService struct {
 	db         *gorm.DB
 	jwtService *JWTService
@@ -48,11 +60,11 @@ func (s *AuthService) Register(request models.RegisterRequest) *models.ApiRespon
 	}
 
 	if request.Profile.ProfilePhotoID != nil && s.db.First(&models.Photo{}, request.Profile.ProfilePhotoID).Error != nil {
-		return models.NewBadNotFound[models.LoginResponse]("Profile photo not found")
+		return models.NewNotFound[models.LoginResponse]("Profile photo not found")
 	}
 
 	if request.Profile.BannerPhotoID != nil && s.db.First(&models.Photo{}, request.Profile.BannerPhotoID).Error != nil {
-		return models.NewBadNotFound[models.LoginResponse]("Banner photo not found")
+		return models.NewNotFound[models.LoginResponse]("Banner photo not found")
 	}
 
 	hashedPassword, _ := HashPassword(request.Password)
@@ -63,7 +75,7 @@ func (s *AuthService) Register(request models.RegisterRequest) *models.ApiRespon
 	s.db.Create(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
-	return models.NewOk(&models.LoginResponse{Username: request.Username, Token: token, Profile: profile})
+	return models.NewOk(&models.LoginResponse{Username: request.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
 }
 
 func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[models.LoginResponse] {
@@ -78,16 +90,17 @@ func (s *AuthService) Login(request models.LoginRequest) *models.ApiResponse[mod
 	}
 
 	var profile models.Profile
-	s.db.Where("user_id = ?", user.ID).First(&profile)
+	s.db.Where("user_id = ?", user.ID).Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
-	return models.NewOk(&models.LoginResponse{Username: user.Username, Token: token, Profile: profile})
+
+	return models.NewOk(&models.LoginResponse{Username: user.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
 }
 
 func (s *AuthService) Renew(request *models.JWTDto) *models.ApiResponse[models.LoginResponse] {
 	profile := models.Profile{}
-	s.db.Preload("User").First(&profile, request.ID)
+	s.db.Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile, request.ID)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, profile.User.Username)
-	return models.NewOk(&models.LoginResponse{Username: profile.User.Username, Token: token, Profile: profile})
+	return models.NewOk(&models.LoginResponse{Username: profile.User.Username, Token: token, Profile: *profileToResponseAuth(&profile, profile.User.Username)})
 }

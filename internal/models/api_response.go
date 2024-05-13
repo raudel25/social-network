@@ -41,7 +41,7 @@ func NewBadRequest[T any](message string) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusBadRequest, Message: message, Data: nil}
 }
 
-func NewBadNotFound[T any](message string) *ApiResponse[T] {
+func NewNotFound[T any](message string) *ApiResponse[T] {
 	return &ApiResponse[T]{Status: http.StatusNotFound, Message: message, Data: nil}
 }
 
