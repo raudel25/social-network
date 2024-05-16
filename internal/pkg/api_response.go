@@ -21,6 +21,7 @@ func (uc *ApiResponse[T]) Ok() bool {
 func (uc *ApiResponse[T]) Response(c *gin.Context) {
 	if uc.Data == nil {
 		c.JSON(uc.Status, gin.H{
+			"ok":      uc.Ok(),
 			"message": uc.Message,
 		})
 
@@ -28,6 +29,7 @@ func (uc *ApiResponse[T]) Response(c *gin.Context) {
 	}
 
 	c.JSON(uc.Status, gin.H{
+		"ok":      uc.Ok(),
 		"message": uc.Message,
 		"data":    uc.Data})
 

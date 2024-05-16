@@ -7,10 +7,12 @@ import (
 	"social-network-api/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 )
 
 func SetupApi(config models.Config) *gin.Engine {
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	db := db.ConnectDatabase(config)
 

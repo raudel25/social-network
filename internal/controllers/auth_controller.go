@@ -21,7 +21,7 @@ func (s *UserController) Login(c *gin.Context) {
 		return
 	}
 
-	s.authService.Login(request).Response(c)
+	s.authService.Login(&request).Response(c)
 
 }
 
@@ -34,7 +34,7 @@ func (s *UserController) Register(c *gin.Context) {
 		return
 	}
 
-	s.authService.Register(request).Response(c)
+	s.authService.Register(&request).Response(c)
 }
 
 func (s *UserController) Renew(c *gin.Context) {

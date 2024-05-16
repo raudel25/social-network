@@ -47,9 +47,13 @@ func NewAuthService(db *gorm.DB, jwtService *JWTService) *AuthService {
 	return &AuthService{db: db, jwtService: jwtService}
 }
 
-func (s *AuthService) Register(request models.RegisterRequest) *pkg.ApiResponse[models.LoginResponse] {
-	if s.db.Where("username =?", request.Username).First(&models.User{}).Error == nil || s.db.Where("email =?", request.Email).First(&models.User{}).Error == nil {
-		return pkg.NewApiResponse[models.LoginResponse](http.StatusConflict, "User already exists", nil)
+func (s *AuthService) Register(request *models.RegisterRequest) *pkg.ApiResponse[models.LoginResponse] {
+	if s.db.Where("username =?", request.Username).First(&models.User{}).Error == nil {
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusConflict, "Username already exists", nil)
+	}
+
+	if s.db.Where("email =?", request.Email).First(&models.User{}).Error == nil {
+		return pkg.NewApiResponse[models.LoginResponse](http.StatusConflict, "Email already exists", nil)
 	}
 
 	if len(request.Password) < 8 {
@@ -60,26 +64,18 @@ func (s *AuthService) Register(request models.RegisterRequest) *pkg.ApiResponse[
 		return pkg.NewApiResponse[models.LoginResponse](http.StatusBadRequest, "Invalid email", nil)
 	}
 
-	if request.Profile.ProfilePhotoID != nil && s.db.First(&models.Photo{}, request.Profile.ProfilePhotoID).Error != nil {
-		return pkg.NewNotFound[models.LoginResponse]("Profile photo not found")
-	}
-
-	if request.Profile.BannerPhotoID != nil && s.db.First(&models.Photo{}, request.Profile.BannerPhotoID).Error != nil {
-		return pkg.NewNotFound[models.LoginResponse]("Banner photo not found")
-	}
-
 	hashedPassword, _ := HashPassword(request.Password)
 	user := models.User{Username: request.Username, Email: request.Email, Password: hashedPassword}
 	s.db.Create(&user)
 
-	profile := models.Profile{UserID: user.ID, Name: request.Name, ProfilePhotoID: request.Profile.ProfilePhotoID, BannerPhotoID: request.Profile.BannerPhotoID, RichText: request.Profile.RichText}
+	profile := models.Profile{UserID: user.ID, Name: request.Name, ProfilePhotoID: nil, BannerPhotoID: nil, RichText: nil}
 	s.db.Create(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
 	return pkg.NewOk(&models.LoginResponse{Username: request.Username, Token: token, Profile: *profileToResponseAuth(&profile, user.Username)})
 }
 
-func (s *AuthService) Login(request models.LoginRequest) *pkg.ApiResponse[models.LoginResponse] {
+func (s *AuthService) Login(request *models.LoginRequest) *pkg.ApiResponse[models.LoginResponse] {
 
 	var user models.User
 	if s.db.Where("username = ? OR email = ?", request.Username, request.Username).First(&user).Error != nil {
