@@ -5,14 +5,25 @@ import (
 	"social-network-api/internal/db"
 	"social-network-api/internal/models"
 	"social-network-api/internal/services"
+	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func SetupApi(config models.Config) *gin.Engine {
 	r := gin.Default()
-	r.Use(cors.Default())
+
+	// config.AllowOrigins = []string{"http://localhost:3000"} // Reemplaza esto con el origen real de tu aplicación cliente
+	// config.AllowMethods = []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, "OPTIONS"}
+	// config.AllowHeaders = []string{"Authorization", "Content-Type"}
+
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowHeaders:    []string{"Authorization", "Content-Type"},
+		ExposeHeaders:   []string{"Content-Length"},
+		MaxAge:          12 * time.Hour,
+	}))
 
 	db := db.ConnectDatabase(config)
 
