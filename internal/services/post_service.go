@@ -39,7 +39,7 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	}
 }
 
-func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.PostResponse], jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
 	var recommendationPosts []models.Post
 
 	query := fmt.Sprintf(`
@@ -67,7 +67,7 @@ func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination, jwt *m
 	return pkg.NewOk(pagination)
 }
 
-func (s *PostService) GetPostsByUser(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+func (s *PostService) GetPostsByUser(pagination *pkg.Pagination[models.PostResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
 	var posts []models.Post
 	pagination.Count(s.db.Where("profile_id =?", id).Model(&models.Post{}))
 

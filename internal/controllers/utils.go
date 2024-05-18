@@ -46,16 +46,16 @@ func CheckId(c *gin.Context) *pkg.ApiResponse[uint] {
 	return pkg.NewOk(&finalUint)
 }
 
-func CheckPagination(c *gin.Context) *pkg.ApiResponse[pkg.Pagination] {
+func CheckPagination[T any](c *gin.Context) *pkg.ApiResponse[pkg.Pagination[T]] {
 	page, err := strconv.ParseUint(c.Query("page"), 10, 64)
 	if err != nil {
-		return pkg.NewBadRequest[pkg.Pagination]("Incorrect page")
+		return pkg.NewBadRequest[pkg.Pagination[T]]("Incorrect page")
 	}
 
 	limit, err := strconv.ParseUint(c.Query("limit"), 10, 64)
 	if err != nil {
-		return pkg.NewBadRequest[pkg.Pagination]("Incorrect limit")
+		return pkg.NewBadRequest[pkg.Pagination[T]]("Incorrect limit")
 	}
 
-	return pkg.NewOk(&pkg.Pagination{Page: int(page), Limit: int(limit)})
+	return pkg.NewOk(&pkg.Pagination[T]{Page: int(page), Limit: int(limit)})
 }

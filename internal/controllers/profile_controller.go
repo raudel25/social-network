@@ -20,7 +20,7 @@ func (s *ProfileController) GetProfiles(c *gin.Context) {
 		return
 	}
 
-	checkPagination := CheckPagination(c)
+	checkPagination := CheckPagination[models.ProfileResponse](c)
 	if !checkPagination.Ok() {
 		checkPagination.Response(c)
 		return
@@ -43,7 +43,7 @@ func (s *ProfileController) GetByFollowed(c *gin.Context) {
 		return
 	}
 
-	checkPagination := CheckPagination(c)
+	checkPagination := CheckPagination[models.ProfileResponse](c)
 	if !checkPagination.Ok() {
 		checkPagination.Response(c)
 		return
@@ -66,7 +66,7 @@ func (s *ProfileController) GetByFollower(c *gin.Context) {
 		return
 	}
 
-	checkPagination := CheckPagination(c)
+	checkPagination := CheckPagination[models.ProfileResponse](c)
 	if !checkPagination.Ok() {
 		checkPagination.Response(c)
 		return

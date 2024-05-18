@@ -32,7 +32,7 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 	}
 }
 
-func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination[models.ProfileResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
 	var followerProfiles []models.Profile
 
 	pagination.Count(s.db.Table("follows").Select("*").
@@ -56,7 +56,7 @@ func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination, id uint, jwt 
 	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByFollower(pagination *pkg.Pagination, id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+func (s *ProfileService) GetByFollower(pagination *pkg.Pagination[models.ProfileResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
 	var followedProfiles []models.Profile
 
 	pagination.Count(s.db.Table("follows").Select("*").
@@ -81,7 +81,7 @@ func (s *ProfileService) GetByFollower(pagination *pkg.Pagination, id uint, jwt 
 	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination] {
+func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination[models.ProfileResponse], jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
 	var recommendationProfiles []models.Profile
 
 	query := fmt.Sprintf(`

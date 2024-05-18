@@ -2,11 +2,11 @@ package models
 
 type Config struct {
 	Database struct {
-		Host     string `json:"Host" binding:"required"`
-		Port     int    `json:"Port" binding:"required"`
-		User     string `json:"User" binding:"required"`
-		Password string `json:"Password" binding:"required"`
-		DBName   string `json:"DBName" binding:"required"`
+		Host     string `json:"host" binding:"required"`
+		Port     int    `json:"port" binding:"required"`
+		User     string `json:"user" binding:"required"`
+		Password string `json:"password" binding:"required"`
+		DBName   string `json:"dbName" binding:"required"`
 	} `json:"Database" binding:"required"`
 	SecretKey string `json:"SecretKey" binding:"required"`
 }

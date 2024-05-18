@@ -14,10 +14,6 @@ import (
 func SetupApi(config models.Config) *gin.Engine {
 	r := gin.Default()
 
-	// config.AllowOrigins = []string{"http://localhost:3000"} // Reemplaza esto con el origen real de tu aplicación cliente
-	// config.AllowMethods = []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, "OPTIONS"}
-	// config.AllowHeaders = []string{"Authorization", "Content-Type"}
-
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 		AllowHeaders:    []string{"Authorization", "Content-Type"},

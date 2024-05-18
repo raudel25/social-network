@@ -20,7 +20,7 @@ func (s *PostController) GetPost(c *gin.Context) {
 		return
 	}
 
-	checkPagination := CheckPagination(c)
+	checkPagination := CheckPagination[models.PostResponse](c)
 	if !checkPagination.Ok() {
 		checkPagination.Response(c)
 		return
@@ -43,7 +43,7 @@ func (s *PostController) GetPostsByUser(c *gin.Context) {
 		return
 	}
 
-	checkPagination := CheckPagination(c)
+	checkPagination := CheckPagination[models.PostResponse](c)
 	if !checkPagination.Ok() {
 		checkPagination.Response(c)
 		return

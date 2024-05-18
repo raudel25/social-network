@@ -4,19 +4,19 @@ import "time"
 
 type PostRequest struct {
 	Title    string   `json:"title" binding:"required"`
-	PhotoID  *uint    `json:"photo_id"`
-	RePostID *uint    `json:"re_post_id"`
-	RichText RichText `json:"rich_text" binding:"required"`
+	PhotoID  *uint    `json:"photoId"`
+	RePostID *uint    `json:"rePostId"`
+	RichText RichText `json:"richText" binding:"required"`
 }
 
 type PostResponse struct {
 	Title         string          `json:"title"`
 	Profile       ProfileResponse `json:"profile"`
 	Photo         *Photo          `json:"photo"`
-	RichText      RichText        `json:"rich_text"`
-	RePost        *PostResponse   `json:"re_post"`
+	RichText      RichText        `json:"richText"`
+	RePost        *PostResponse   `json:"rePost"`
 	Reaction      bool            `json:"reaction"`
-	CantReactions int             `json:"cant_reactions"`
-	CantMessages  int             `json:"cant_messages"`
+	CantReactions int             `json:"cantReactions"`
+	CantMessages  int             `json:"cantMessages"`
 	Date          time.Time       `json:"date"`
 }
