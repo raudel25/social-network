@@ -30,8 +30,6 @@ func profileToResponseAuth(profile *models.Profile, username string) *models.Pro
 	return &models.ProfileResponse{
 		ID:           profile.ID,
 		Name:         profile.Name,
-		ProfilePhoto: profile.ProfilePhoto,
-		BannerPhoto:  profile.BannerPhoto,
 		RichText:     profile.RichText,
 		Follow:       false,
 		Username:     username,
@@ -87,7 +85,7 @@ func (s *AuthService) Login(request *models.LoginRequest) *pkg.ApiResponse[model
 	}
 
 	var profile models.Profile
-	s.db.Where("user_id = ?", user.ID).Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile)
+	s.db.Where("user_id = ?", user.ID).Preload("BannerPhoto").First(&profile)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, user.Username)
 
@@ -96,7 +94,7 @@ func (s *AuthService) Login(request *models.LoginRequest) *pkg.ApiResponse[model
 
 func (s *AuthService) Renew(request *models.JWTDto) *pkg.ApiResponse[models.LoginResponse] {
 	profile := models.Profile{}
-	s.db.Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile, request.ID)
+	s.db.Preload("User").First(&profile, request.ID)
 
 	token, _ := s.jwtService.GenerateJWT(profile.ID, profile.User.Username)
 	return pkg.NewOk(&models.LoginResponse{Username: profile.User.Username, Token: token, Profile: *profileToResponseAuth(&profile, profile.User.Username)})

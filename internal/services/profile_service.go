@@ -22,13 +22,11 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 
 	}
 	return &models.ProfileResponse{
-		ID:           profile.ID,
-		Name:         profile.Name,
-		ProfilePhoto: profile.ProfilePhoto,
-		BannerPhoto:  profile.BannerPhoto,
-		RichText:     profile.RichText,
-		Follow:       follow,
-		Username:     profile.User.Username,
+		ID:       profile.ID,
+		Name:     profile.Name,
+		RichText: profile.RichText,
+		Follow:   follow,
+		Username: profile.User.Username,
 	}
 }
 
@@ -49,7 +47,7 @@ func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination[models.Profile
 	s.db.Table("follows").Select("*").
 		Joins("join profiles on follows.follower_profile_id = profiles.id").
 		Where("follows.followed_profile_id =?", id).Scopes(pagination.Paginate).
-		Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").
+		Preload("FollowedBy").Preload("User").
 		Find(&followerProfiles)
 
 	var profiles []models.ProfileResponse
@@ -81,7 +79,7 @@ func (s *ProfileService) GetByFollower(pagination *pkg.Pagination[models.Profile
 		Joins("join profiles on follows.followed_profile_id = profiles.id").
 		Where("follows.follower_profile_id =?", id).
 		Scopes(pagination.Paginate).
-		Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").
+		Preload("FollowedBy").Preload("User").
 		Find(&followedProfiles)
 
 	var profiles []models.ProfileResponse
@@ -119,7 +117,7 @@ func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination[m
 	var profiles []models.ProfileResponse
 
 	for _, v := range recommendationProfiles {
-		s.db.Preload("User").Preload("FollowedBy").Preload("ProfilePhoto").Preload("BannerPhoto").Find(&v, v.ID)
+		s.db.Preload("User").Preload("FollowedBy").Find(&v, v.ID)
 		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
 	}
 
@@ -130,7 +128,7 @@ func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination[m
 
 func (s *ProfileService) GetByUsername(username string, jwt *models.JWTDto) *pkg.ApiResponse[models.ProfileResponse] {
 	var profile models.Profile
-	if s.db.Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").Where("username =?", username).Joins("JOIN users ON profiles.user_id = users.id").First(&profile).Error != nil {
+	if s.db.Preload("FollowedBy").Preload("User").Where("username =?", username).Joins("JOIN users ON profiles.user_id = users.id").First(&profile).Error != nil {
 		return pkg.NewNotFound[models.ProfileResponse]("Profile not found")
 	}
 

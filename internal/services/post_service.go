@@ -29,7 +29,6 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	return &models.PostResponse{
 		Title:         post.Title,
 		Profile:       *profileToResponseProfile(id, &post.Profile),
-		Photo:         post.Photo,
 		RichText:      post.RichText,
 		Reaction:      reaction,
 		CantReactions: len(post.Reactions),

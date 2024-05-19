@@ -10,7 +10,6 @@ type Post struct {
 	ProfileID uint
 	Profile   Profile `gorm:"foreignKey:ProfileID"`
 	PhotoID   *uint
-	Photo     *Photo   `gorm:"foreignKey:PhotoID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	RichText  RichText `gorm:"type:jsonb"`
 	RePostID  *uint
 	RePost    *Post      `gorm:"foreignKey:RePostID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`

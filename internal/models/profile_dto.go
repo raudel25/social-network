@@ -10,8 +10,8 @@ type ProfileRequest struct {
 type ProfileResponse struct {
 	ID           uint      `json:"id"`
 	Name         string    `json:"name"`
-	ProfilePhoto *Photo    `json:"profilePhoto"`
-	BannerPhoto  *Photo    `json:"bannerPhoto"`
+	ProfilePhotoID *uint     `json:"profilePhotoId"`
+	BannerPhotoID  *uint     `json:"bannerPhotoId"`
 	RichText     *RichText `json:"richText"`
 	Follow       bool      `json:"follow"`
 	Username     string    `json:"username"`

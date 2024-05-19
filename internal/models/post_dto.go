@@ -12,7 +12,7 @@ type PostRequest struct {
 type PostResponse struct {
 	Title         string          `json:"title"`
 	Profile       ProfileResponse `json:"profile"`
-	Photo         *Photo          `json:"photo"`
+	PhotoID       uint          `json:"photoId"`
 	RichText      RichText        `json:"richText"`
 	RePost        *PostResponse   `json:"rePost"`
 	Reaction      bool            `json:"reaction"`

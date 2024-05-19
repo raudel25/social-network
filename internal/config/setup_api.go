@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"social-network-api/internal/controllers"
 	"social-network-api/internal/db"
 	"social-network-api/internal/models"
@@ -27,10 +28,16 @@ func SetupApi(config models.Config) *gin.Engine {
 	authService := services.NewAuthService(db, jwtService)
 	postService := services.NewPostService(db)
 	profileService := services.NewProfileService(db)
+	photoService := services.NewPhotoService(db)
 
 	authRoutes(r, authService, jwtService)
 	postRoutes(r, postService, jwtService)
 	profileRoutes(r, profileService, jwtService)
+	photoRoutes(r, photoService, jwtService)
+
+	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+		panic("Error creating uploads directory: " + err.Error())
+	}
 
 	return r
 }
@@ -65,4 +72,12 @@ func profileRoutes(r *gin.Engine, profileService *services.ProfileService, jwtSe
 	post.GET("/follower/:username", controller.GetByFollower)
 	post.PUT("", controller.EditProfile)
 	post.POST("/followUnFollow/:id", controller.FollowUnFollow)
+}
+
+func photoRoutes(r *gin.Engine, photoService *services.PhotoService, jwtService *services.JWTService) {
+	controller := controllers.NewPhotoController(photoService, jwtService)
+	photo := r.Group("/photo")
+
+	photo.GET("/:id", controller.GetPhoto)
+	photo.POST("/upload", controller.UploadPhoto)
 }
