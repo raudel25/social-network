@@ -50,7 +50,7 @@ func postRoutes(r *gin.Engine, postService *services.PostService, jwtService *se
 
 	post.POST("", controller.NewPost)
 	post.GET("", controller.GetPost)
-	post.GET("/user/:id", controller.GetPostsByUser)
+	post.GET("/user/:username", controller.GetPostsByUser)
 	post.POST("/message/:id", controller.MessagePost)
 	post.POST("/reaction/:id", controller.ReactionPost)
 }
@@ -60,9 +60,9 @@ func profileRoutes(r *gin.Engine, profileService *services.ProfileService, jwtSe
 	post := r.Group("/profile")
 
 	post.GET("", controller.GetProfiles)
-	post.GET("/:id", controller.GetByID)
-	post.GET("/followed/:id", controller.GetByFollowed)
-	post.GET("/follower/:id", controller.GetByFollower)
+	post.GET("/:username", controller.GetByID)
+	post.GET("/followed/:username", controller.GetByFollowed)
+	post.GET("/follower/:username", controller.GetByFollower)
 	post.PUT("", controller.EditProfile)
 	post.POST("/followUnFollow/:id", controller.FollowUnFollow)
 }

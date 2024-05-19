@@ -32,8 +32,15 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 	}
 }
 
-func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination[models.ProfileResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
+func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination[models.ProfileResponse], username string, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
 	var followerProfiles []models.Profile
+
+	response := s.GetByUsername(username, jwt)
+	if !response.Ok() {
+		return pkg.NewNotFound[pkg.Pagination[models.ProfileResponse]]("Profile not found")
+	}
+
+	id := response.Data.ID
 
 	pagination.Count(s.db.Table("follows").Select("*").
 		Joins("join profiles on follows.follower_profile_id = profiles.id").
@@ -56,8 +63,15 @@ func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination[models.Profile
 	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByFollower(pagination *pkg.Pagination[models.ProfileResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
+func (s *ProfileService) GetByFollower(pagination *pkg.Pagination[models.ProfileResponse], username string, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
 	var followedProfiles []models.Profile
+
+	response := s.GetByUsername(username, jwt)
+	if !response.Ok() {
+		return pkg.NewNotFound[pkg.Pagination[models.ProfileResponse]]("Profile not found")
+	}
+
+	id := response.Data.ID
 
 	pagination.Count(s.db.Table("follows").Select("*").
 		Joins("join profiles on follows.followed_profile_id = profiles.id").
@@ -114,9 +128,9 @@ func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination[m
 	return pkg.NewOk(pagination)
 }
 
-func (s *ProfileService) GetByID(id uint, jwt *models.JWTDto) *pkg.ApiResponse[models.ProfileResponse] {
+func (s *ProfileService) GetByUsername(username string, jwt *models.JWTDto) *pkg.ApiResponse[models.ProfileResponse] {
 	var profile models.Profile
-	if s.db.Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").First(&profile, id).Error != nil {
+	if s.db.Preload("FollowedBy").Preload("User").Preload("ProfilePhoto").Preload("BannerPhoto").Where("username =?", username).Joins("JOIN users ON profiles.user_id = users.id").First(&profile).Error != nil {
 		return pkg.NewNotFound[models.ProfileResponse]("Profile not found")
 	}
 
