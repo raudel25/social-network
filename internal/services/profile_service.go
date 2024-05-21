@@ -22,11 +22,13 @@ func profileToResponseProfile(id uint, profile *models.Profile) *models.ProfileR
 
 	}
 	return &models.ProfileResponse{
-		ID:       profile.ID,
-		Name:     profile.Name,
-		RichText: profile.RichText,
-		Follow:   follow,
-		Username: profile.User.Username,
+		ID:             profile.ID,
+		Name:           profile.Name,
+		RichText:       profile.RichText,
+		Follow:         follow,
+		Username:       profile.User.Username,
+		ProfilePhotoID: profile.ProfilePhotoID,
+		BannerPhotoID:  profile.BannerPhotoID,
 	}
 }
 

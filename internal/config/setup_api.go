@@ -17,6 +17,7 @@ func SetupApi(config models.Config) *gin.Engine {
 
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:    []string{"Authorization", "Content-Type"},
 		ExposeHeaders:   []string{"Content-Length"},
 		MaxAge:          12 * time.Hour,

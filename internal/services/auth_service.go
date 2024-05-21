@@ -28,11 +28,13 @@ func CheckPasswordHash(password, hash string) bool {
 
 func profileToResponseAuth(profile *models.Profile, username string) *models.ProfileResponse {
 	return &models.ProfileResponse{
-		ID:           profile.ID,
-		Name:         profile.Name,
-		RichText:     profile.RichText,
-		Follow:       false,
-		Username:     username,
+		ID:             profile.ID,
+		Name:           profile.Name,
+		RichText:       profile.RichText,
+		Follow:         false,
+		Username:       username,
+		ProfilePhotoID: profile.ProfilePhotoID,
+		BannerPhotoID:  profile.BannerPhotoID,
 	}
 }
 
