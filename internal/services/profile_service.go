@@ -104,14 +104,27 @@ func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination[m
 		SELECT f.followed_profile_id AS id  
 		FROM follows as f
 		WHERE 
-		EXISTS (SELECT 1 FROM follows WHERE follower_profile_id=%d AND followed_profile_id = f.follower_profile_id)
+		EXISTS (
+			SELECT 1 FROM follows 
+			WHERE follower_profile_id=%d 
+			AND followed_profile_id = f.follower_profile_id 
+			AND deleted_at IS NULL 
+		)
 		AND
-		NOT EXISTS (SELECT 1 FROM follows WHERE follower_profile_id=%d AND followed_profile_id = f.followed_profile_id)
+		NOT EXISTS (
+			SELECT 1 FROM follows 
+			WHERE follower_profile_id=%d 
+			AND followed_profile_id = f.followed_profile_id 
+			AND deleted_at IS NULL 
+		)
 		AND
 		f.followed_profile_id <> %d
+		AND
+		f.deleted_at IS NULL 
 		ORDER BY f.followed_profile_id DESC
 	) as f
-	JOIN profiles ON f.id=profiles.id`, jwt.ID, jwt.ID, jwt.ID)
+	JOIN profiles ON f.id=profiles.id
+	WHERE profiles.deleted_at IS NULL`, jwt.ID, jwt.ID, jwt.ID)
 
 	pagination.CountRaw(s.db, query)
 	s.db.Raw(query).Scopes(pagination.Paginate).Scan(&recommendationProfiles)
@@ -166,10 +179,10 @@ func (s *ProfileService) FollowUnFollow(id uint, jwt *models.JWTDto) *pkg.Single
 		return pkg.NewSingleNotFound("Profile not found")
 	}
 
-	if s.db.Where("follower_id =? AND followed_id =?", jwt.ID, id).First(&models.Follow{}).Error != nil {
+	if s.db.Where("follower_profile_id =? AND followed_profile_id =?", jwt.ID, id).First(&models.Follow{}).Error != nil {
 		s.db.Create(&models.Follow{FollowerProfileID: jwt.ID, FollowedProfileID: id})
 	} else {
-		s.db.Where("follower_id =? AND followed_id =?", jwt.ID, id).Delete(&models.Follow{})
+		s.db.Where("follower_profile_id =? AND followed_profile_id =?", jwt.ID, id).Delete(&models.Follow{})
 	}
 
 	return pkg.NewSingleOkSingle()
