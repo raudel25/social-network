@@ -20,12 +20,6 @@ func NewPhotoController(photoService *services.PhotoService, jwtService *service
 }
 
 func (s *PhotoController) GetPhoto(c *gin.Context) {
-	checkAuthorized := CheckAuthorized(c, s.jwtService)
-	if !checkAuthorized.Ok() {
-		checkAuthorized.Response(c)
-		return
-	}
-
 	id := CheckId(c)
 	if !id.Ok() {
 		id.Response(c)

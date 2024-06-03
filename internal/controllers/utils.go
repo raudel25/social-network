@@ -20,13 +20,7 @@ func CheckRequest[T any](c *gin.Context, request *T) *pkg.ApiResponse[T] {
 }
 
 func CheckAuthorized(c *gin.Context, jwt_service *services.JWTService) *pkg.ApiResponse[models.JWTDto] {
-	var tokenParam string
-	tokenParam = c.GetHeader("Authorization")
-	if len(tokenParam) == 0 {
-		tokenParam = c.Query("token")
-	}
-	
-	token, err := jwt_service.CheckJWT(tokenParam)
+	token, err := jwt_service.CheckJWT(c.GetHeader("Authorization"))
 
 	if err != nil {
 		return pkg.NewApiResponse[models.JWTDto](http.StatusUnauthorized, "Invalid token", nil)
@@ -37,7 +31,7 @@ func CheckAuthorized(c *gin.Context, jwt_service *services.JWTService) *pkg.ApiR
 		return pkg.NewApiResponse[models.JWTDto](http.StatusUnauthorized, "Invalid token", nil)
 	}
 
-	return pkg.NewApiResponse[models.JWTDto](http.StatusOK, "", &models.JWTDto{ID: uint(claims["id"].(float64)), Username: claims["username"].(string)})
+	return pkg.NewApiResponse(http.StatusOK, "", &models.JWTDto{ID: uint(claims["id"].(float64)), Username: claims["username"].(string)})
 }
 
 func CheckId(c *gin.Context) *pkg.ApiResponse[uint] {
