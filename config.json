@@ -1,0 +1,10 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "social_network",
+    "password": "123!@#",
+    "dbName": "social_network"
+  },
+  "secretKey": "ladkvn;svmlfebm'e,r;.sB>/f[ndtakm2498gj30pgmgSJRBNO4IEQ05GIPERGQEROINB[ARQ3041icwnu4wiu4n"
+}

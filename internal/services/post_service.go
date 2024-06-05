@@ -27,7 +27,6 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	}
 
 	return &models.PostResponse{
-		Title:         post.Title,
 		Profile:       *profileToResponseProfile(id, &post.Profile),
 		RichText:      post.RichText,
 		Reaction:      reaction,
@@ -94,7 +93,7 @@ func (s *PostService) NewPost(request *models.PostRequest, jwt *models.JWTDto) *
 		return pkg.NewSingleNotFound("Post not found")
 	}
 
-	s.db.Create(&models.Post{Title: request.Title, ProfileID: jwt.ID, PhotoID: request.PhotoID, RePostID: request.RePostID, RichText: request.RichText})
+	s.db.Create(&models.Post{ProfileID: jwt.ID, PhotoID: request.PhotoID, RePostID: request.RePostID, RichText: request.RichText})
 
 	return pkg.NewSingleOkSingle()
 }
