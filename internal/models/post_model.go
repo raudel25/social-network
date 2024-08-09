@@ -14,5 +14,5 @@ type Post struct {
 	RePost    *Post      `gorm:"foreignKey:RePostID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	Messages  []Message  `gorm:"foreignKey:PostID"`
 	Reactions []Reaction `gorm:"foreignKey:PostID"`
-	Seen []SeenPost `gorm:"foreignKey:PostID"`
+	Seen      []SeenPost `gorm:"foreignKey:PostID"`
 }

@@ -16,7 +16,7 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	reaction := false
 
 	for _, v := range post.Reactions {
-		if v.Profile.ID == id {
+		if v.ProfileID == id {
 			reaction = true
 		}
 	}
@@ -27,12 +27,14 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	}
 
 	return &models.PostResponse{
+		ID:            post.ID,
 		Profile:       *profileToResponseProfile(id, &post.Profile),
 		RichText:      post.RichText,
 		Reaction:      reaction,
 		CantReactions: len(post.Reactions),
 		CantMessages:  len(post.Messages),
 		RePost:        rePost,
+		PhotoID:       post.PhotoID,
 		Date:          post.CreatedAt,
 	}
 }
@@ -65,13 +67,22 @@ func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.
 	return pkg.NewOk(pagination)
 }
 
-func (s *PostService) GetPostsByUser(pagination *pkg.Pagination[models.PostResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
+func (s *PostService) GetPostsByUser(pagination *pkg.Pagination[models.PostResponse], username string, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
+	var profile models.Profile
+	if s.db.Preload("User").Where("username =?", username).Joins("JOIN users ON profiles.user_id = users.id").First(&profile).Error != nil {
+		return pkg.NewNotFound[pkg.Pagination[models.PostResponse]]("Profile not found")
+	}
+
+	id := profile.ID
+
 	var posts []models.Post
 	pagination.Count(s.db.Where("profile_id =?", id).Model(&models.Post{}))
 
 	s.db.Where("profile_id =?", id).Scopes(pagination.Paginate).
-		Preload("Reactions").Preload("Messages").Preload("Profile").
-		Preload("Profile.User").Preload("Profile.FollowedBy").Find(&posts)
+		Preload("Reactions").Preload("Messages").
+		Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").
+		Preload("RePost").Preload("RePost.Reactions").Preload("RePost.Messages").
+		Preload("RePost.Profile").Preload("RePost.Profile.User").Preload("RePost.Profile.FollowedBy").Find(&posts)
 
 	var response []models.PostResponse
 
@@ -109,10 +120,10 @@ func (s *PostService) MessagePost(request *models.MessageRequest, id uint, jwt *
 }
 
 func (s *PostService) ReactionPost(id uint, jwt *models.JWTDto) *pkg.SingleApiResponse {
-	if s.db.Where("profile_id =? AND post_id =?", jwt.ID).First(&models.Reaction{}).Error != nil {
+	if s.db.Where("profile_id =? AND post_id =?", jwt.ID, id).First(&models.Reaction{}).Error != nil {
 		s.db.Create(&models.Reaction{ProfileID: jwt.ID, PostID: id})
 	} else {
-		s.db.Where("profile_id =? AND post_id =?", jwt.ID).Delete(&models.Reaction{})
+		s.db.Where("profile_id =? AND post_id =?", jwt.ID, id).Delete(&models.Reaction{})
 	}
 
 	return pkg.NewSingleOkSingle()

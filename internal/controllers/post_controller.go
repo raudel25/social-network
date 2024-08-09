@@ -37,19 +37,13 @@ func (s *PostController) GetPostsByUser(c *gin.Context) {
 		return
 	}
 
-	idRequest := CheckId(c)
-	if !idRequest.Ok() {
-		idRequest.Response(c)
-		return
-	}
-
 	checkPagination := CheckPagination[models.PostResponse](c)
 	if !checkPagination.Ok() {
 		checkPagination.Response(c)
 		return
 	}
 
-	s.postService.GetPostsByUser(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
+	s.postService.GetPostsByUser(checkPagination.Data, c.Param("username"), checkAuthorized.Data).Response(c)
 }
 
 func (s *PostController) NewPost(c *gin.Context) {
