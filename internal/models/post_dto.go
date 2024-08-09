@@ -11,11 +11,12 @@ type PostRequest struct {
 type PostResponse struct {
 	ID            uint            `json:"id"`
 	Profile       ProfileResponse `json:"profile"`
-	PhotoID       *uint            `json:"photoId"`
+	PhotoID       *uint           `json:"photoId"`
 	RichText      *RichText       `json:"richText"`
 	RePost        *PostResponse   `json:"rePost"`
 	Reaction      bool            `json:"reaction"`
 	CantReactions int             `json:"cantReactions"`
 	CantMessages  int             `json:"cantMessages"`
+	CantRePosts   int             `json:"cantRePosts"`
 	Date          time.Time       `json:"date"`
 }

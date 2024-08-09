@@ -31,8 +31,9 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 		Profile:       *profileToResponseProfile(id, &post.Profile),
 		RichText:      post.RichText,
 		Reaction:      reaction,
-		CantReactions: len(post.Reactions),
-		CantMessages:  len(post.Messages),
+		CantReactions: post.CantReactions,
+		CantMessages:  post.CantMessages,
+		CantRePosts:   post.CantRePosts,
 		RePost:        rePost,
 		PhotoID:       post.PhotoID,
 		Date:          post.CreatedAt,
@@ -79,9 +80,9 @@ func (s *PostService) GetPostsByUser(pagination *pkg.Pagination[models.PostRespo
 	pagination.Count(s.db.Where("profile_id =?", id).Model(&models.Post{}))
 
 	s.db.Where("profile_id =?", id).Scopes(pagination.Paginate).
-		Preload("Reactions").Preload("Messages").
+		Preload("Reactions").
 		Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").
-		Preload("RePost").Preload("RePost.Reactions").Preload("RePost.Messages").
+		Preload("RePost").Preload("RePost.Reactions").
 		Preload("RePost.Profile").Preload("RePost.Profile.User").Preload("RePost.Profile.FollowedBy").Find(&posts)
 
 	var response []models.PostResponse
@@ -100,8 +101,15 @@ func (s *PostService) NewPost(request *models.PostRequest, jwt *models.JWTDto) *
 		return pkg.NewSingleNotFound("Photo not found")
 	}
 
-	if request.RePostID != nil && s.db.First(&models.Post{}, request.RePostID).Error != nil {
-		return pkg.NewSingleNotFound("Post not found")
+	if request.RePostID != nil {
+		var post models.Post
+		if s.db.First(&post, request.RePostID).Error != nil {
+			return pkg.NewSingleNotFound("Post not found")
+		}
+
+		post.CantRePosts++
+		s.db.Where("id =?", request.RePostID).Updates(&post)
+
 	}
 
 	s.db.Create(&models.Post{ProfileID: jwt.ID, PhotoID: request.PhotoID, RePostID: request.RePostID, RichText: request.RichText})
@@ -110,21 +118,33 @@ func (s *PostService) NewPost(request *models.PostRequest, jwt *models.JWTDto) *
 }
 
 func (s *PostService) MessagePost(request *models.MessageRequest, id uint, jwt *models.JWTDto) *pkg.SingleApiResponse {
-	if s.db.First(&models.Post{}, id).Error != nil {
+	var post models.Post
+	if s.db.First(&post, id).Error != nil {
 		return pkg.NewSingleNotFound("Post not found")
 	}
 
+	post.CantMessages++
 	s.db.Create(&models.Message{ProfileID: jwt.ID, RichText: request.RichText, PostID: id})
+	s.db.Where("id =?", id).Updates(&post)
 
 	return pkg.NewSingleOkSingle()
 }
 
 func (s *PostService) ReactionPost(id uint, jwt *models.JWTDto) *pkg.SingleApiResponse {
+	var post models.Post
+	if s.db.First(&post, id).Error != nil {
+		return pkg.NewSingleNotFound("Not fount post")
+	}
+
 	if s.db.Where("profile_id =? AND post_id =?", jwt.ID, id).First(&models.Reaction{}).Error != nil {
 		s.db.Create(&models.Reaction{ProfileID: jwt.ID, PostID: id})
+		post.CantReactions++
 	} else {
 		s.db.Where("profile_id =? AND post_id =?", jwt.ID, id).Delete(&models.Reaction{})
+		post.CantReactions--
 	}
+
+	s.db.Where("id =?", id).Updates(&post)
 
 	return pkg.NewSingleOkSingle()
 }
