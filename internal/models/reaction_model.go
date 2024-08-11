@@ -7,6 +7,6 @@ import (
 type Reaction struct {
 	gorm.Model
 	ProfileID uint
-	Profile   User `gorm:"foreignKey:ProfileID"`
+	Profile   Profile `gorm:"foreignKey:ProfileID"`
 	PostID    uint
 }

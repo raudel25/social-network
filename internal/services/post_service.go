@@ -26,6 +26,11 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 		rePost = postToResponsePost(id, post.RePost)
 	}
 
+	var messages []models.MessageResponse
+	for _, m := range post.Messages {
+		messages = append(messages, models.MessageResponse{ID: m.ID, RichText: m.RichText, Profile: *profileToResponseProfile(id, &m.Profile), Date: m.CreatedAt})
+	}
+
 	return &models.PostResponse{
 		ID:            post.ID,
 		Profile:       *profileToResponseProfile(id, &post.Profile),
@@ -36,6 +41,7 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 		CantRePosts:   post.CantRePosts,
 		RePost:        rePost,
 		PhotoID:       post.PhotoID,
+		Messages:      messages,
 		Date:          post.CreatedAt,
 	}
 }
@@ -66,6 +72,17 @@ func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.
 	pagination.Rows = posts
 
 	return pkg.NewOk(pagination)
+}
+
+func (s *PostService) GetPostByID(id uint, jwt *models.JWTDto) *pkg.ApiResponse[models.PostResponse] {
+	var post models.Post
+
+	if s.db.Preload("Reactions").Preload("Messages").Preload("Messages.Profile").Preload("Messages.Profile.User").Preload("Profile").
+		Preload("Profile.User").Preload("Profile.FollowedBy").First(&post, id).Error != nil {
+		return pkg.NewNotFound[models.PostResponse]("Not found post")
+	}
+
+	return pkg.NewOk(postToResponsePost(jwt.ID, &post))
 }
 
 func (s *PostService) GetPostsByUser(pagination *pkg.Pagination[models.PostResponse], username string, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {

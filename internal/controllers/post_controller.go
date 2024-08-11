@@ -29,6 +29,23 @@ func (s *PostController) GetPost(c *gin.Context) {
 	s.postService.GetByRecommendationPost(checkPagination.Data, checkAuthorized.Data).Response(c)
 }
 
+func (s *PostController) GetPostByID(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	s.postService.GetPostByID(*idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
 func (s *PostController) GetPostsByUser(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 

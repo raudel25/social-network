@@ -63,7 +63,7 @@ func (s *ProfileController) GetByFollower(c *gin.Context) {
 	s.profileService.GetByFollower(checkPagination.Data, c.Param("username"), checkAuthorized.Data).Response(c)
 }
 
-func (s *ProfileController) GetByID(c *gin.Context) {
+func (s *ProfileController) GetByUsername(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 
 	if !checkAuthorized.Ok() {
