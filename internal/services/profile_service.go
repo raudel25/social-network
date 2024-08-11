@@ -63,6 +63,26 @@ func (s *ProfileService) GetByFollowed(pagination *pkg.Pagination[models.Profile
 	return pkg.NewOk(pagination)
 }
 
+func (s *ProfileService) GetReactionsPost(pagination *pkg.Pagination[models.ProfileResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
+	pagination.Count(s.db.Where("post_id =?", id).Model(&models.Reaction{}))
+
+	var reactions []models.Reaction
+	s.db.Where("post_id =?", id).Scopes(pagination.Paginate).
+	Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").
+	Find(&reactions)
+
+	var profiles []models.ProfileResponse
+
+	for _, v := range reactions {
+		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v.Profile))
+	}
+
+	pagination.Rows = profiles
+
+	return pkg.NewOk(pagination)
+
+}
+
 func (s *ProfileService) GetByFollower(pagination *pkg.Pagination[models.ProfileResponse], username string, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
 	var followedProfiles []models.Profile
 

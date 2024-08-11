@@ -63,6 +63,29 @@ func (s *ProfileController) GetByFollower(c *gin.Context) {
 	s.profileService.GetByFollower(checkPagination.Data, c.Param("username"), checkAuthorized.Data).Response(c)
 }
 
+func (s *ProfileController) GetReactionsPost(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	checkPagination := CheckPagination[models.ProfileResponse](c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	s.profileService.GetReactionsPost(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
 func (s *ProfileController) GetByUsername(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 

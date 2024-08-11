@@ -113,6 +113,27 @@ func (s *PostService) GetPostsByUser(pagination *pkg.Pagination[models.PostRespo
 	return pkg.NewOk(pagination)
 }
 
+func (s *PostService) GetPostsByRePostId(pagination *pkg.Pagination[models.PostResponse], id uint, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
+	var posts []models.Post
+	pagination.Count(s.db.Where("re_post_id =?", id).Model(&models.Post{}))
+
+	s.db.Where("re_post_id =?", id).Scopes(pagination.Paginate).
+		Preload("Reactions").
+		Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").
+		Preload("RePost").Preload("RePost.Reactions").
+		Preload("RePost.Profile").Preload("RePost.Profile.User").Preload("RePost.Profile.FollowedBy").Find(&posts)
+
+	var response []models.PostResponse
+
+	for _, v := range posts {
+		response = append(response, *postToResponsePost(jwt.ID, &v))
+	}
+
+	pagination.Rows = response
+
+	return pkg.NewOk(pagination)
+}
+
 func (s *PostService) NewPost(request *models.PostRequest, jwt *models.JWTDto) *pkg.SingleApiResponse {
 	if request.PhotoID != nil && s.db.First(&models.Photo{}, request.PhotoID).Error != nil {
 		return pkg.NewSingleNotFound("Photo not found")

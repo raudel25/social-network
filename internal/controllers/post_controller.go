@@ -63,6 +63,29 @@ func (s *PostController) GetPostsByUser(c *gin.Context) {
 	s.postService.GetPostsByUser(checkPagination.Data, c.Param("username"), checkAuthorized.Data).Response(c)
 }
 
+func (s *PostController) GetPostsByRePostID(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	checkPagination := CheckPagination[models.PostResponse](c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	idRequest := CheckId(c)
+	if !idRequest.Ok() {
+		idRequest.Response(c)
+		return
+	}
+
+	s.postService.GetPostsByRePostId(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
+}
+
 func (s *PostController) NewPost(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 
