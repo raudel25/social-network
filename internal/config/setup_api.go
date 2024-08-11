@@ -70,6 +70,7 @@ func profileRoutes(r *gin.Engine, profileService *services.ProfileService, jwtSe
 	post := r.Group("/profile")
 
 	post.GET("", controller.GetProfiles)
+	post.GET("/search", controller.GetSearch)
 	post.GET("/user/:username", controller.GetByUsername)
 	post.GET("/followed/:username", controller.GetByFollowed)
 	post.GET("/reactions/:id", controller.GetReactionsPost)

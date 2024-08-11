@@ -86,6 +86,23 @@ func (s *ProfileController) GetReactionsPost(c *gin.Context) {
 	s.profileService.GetReactionsPost(checkPagination.Data, *idRequest.Data, checkAuthorized.Data).Response(c)
 }
 
+func (s *ProfileController) GetSearch(c *gin.Context) {
+	checkAuthorized := CheckAuthorized(c, s.jwtService)
+
+	if !checkAuthorized.Ok() {
+		checkAuthorized.Response(c)
+		return
+	}
+
+	checkPagination := CheckPagination[models.ProfileResponse](c)
+	if !checkPagination.Ok() {
+		checkPagination.Response(c)
+		return
+	}
+
+	s.profileService.Search(checkPagination.Data, c.Query("search"), checkAuthorized.Data).Response(c)
+}
+
 func (s *ProfileController) GetByUsername(c *gin.Context) {
 	checkAuthorized := CheckAuthorized(c, s.jwtService)
 

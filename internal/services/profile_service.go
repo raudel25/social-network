@@ -68,8 +68,8 @@ func (s *ProfileService) GetReactionsPost(pagination *pkg.Pagination[models.Prof
 
 	var reactions []models.Reaction
 	s.db.Where("post_id =?", id).Scopes(pagination.Paginate).
-	Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").
-	Find(&reactions)
+		Preload("Profile").Preload("Profile.User").Preload("Profile.FollowedBy").
+		Find(&reactions)
 
 	var profiles []models.ProfileResponse
 
@@ -210,4 +210,30 @@ func (s *ProfileService) FollowUnFollow(id uint, jwt *models.JWTDto) *pkg.Single
 
 func NewProfileService(db *gorm.DB) *ProfileService {
 	return &ProfileService{db: db}
+}
+
+func (s *ProfileService) Search(pagination *pkg.Pagination[models.ProfileResponse], search string, jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.ProfileResponse]] {
+	q := 5
+	println(search)
+	pagination.Count(s.db.Table("users").Joins("JOIN profiles on users.id = profiles.user_id").
+		Where(fmt.Sprintf("levenshtein(users.username,'%s') <= %d or levenshtein(profiles.name,'%s') <= %d", search, q, search, q)))
+
+	var searchProfiles []models.Profile
+
+	s.db.Table("profiles").Joins("JOIN users on users.id = profiles.user_id").
+		Where(fmt.Sprintf("levenshtein(users.username,'%s') <= %d or levenshtein(profiles.name,'%s') <= %d", search, q, search, q)).
+		Order(fmt.Sprintf("LEAST(levenshtein(users.username,'%s'),levenshtein(profiles.name,'%s')) ASC", search, search)).
+		Scopes(pagination.Paginate).Preload("User").Preload("FollowedBy").Find(&searchProfiles)
+
+	var profiles []models.ProfileResponse
+
+	for _, v := range searchProfiles {
+		s.db.Preload("User").Preload("FollowedBy").Find(&v, v.ID)
+		profiles = append(profiles, *profileToResponseProfile(jwt.ID, &v))
+	}
+
+	pagination.Rows = profiles
+
+	return pkg.NewOk(pagination)
+
 }

@@ -64,7 +64,7 @@ func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.
 	var posts []models.PostResponse
 
 	for _, v := range recommendationPosts {
-		s.db.Preload("Reactions").Preload("Messages").Preload("Profile").
+		s.db.Preload("Reactions").Preload("Profile").
 			Preload("Profile.User").Preload("Profile.FollowedBy").Find(&v, v.ID)
 		posts = append(posts, *postToResponsePost(jwt.ID, &v))
 	}
