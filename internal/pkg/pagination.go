@@ -8,11 +8,11 @@ import (
 )
 
 type Pagination[T any] struct {
-	Limit      int         `json:"limit,omitempty;query:limit"`
-	Page       int         `json:"page,omitempty;query:page"`
-	TotalRows  int64       `json:"totalRows"`
-	TotalPages int         `json:"totalPages"`
-	Rows       []T `json:"rows"`
+	Limit      int   `json:"limit,omitempty;query:limit"`
+	Page       int   `json:"page,omitempty;query:page"`
+	TotalRows  int64 `json:"totalRows"`
+	TotalPages int   `json:"totalPages"`
+	Rows       []T   `json:"rows"`
 }
 
 func (p *Pagination[T]) GetOffset() int {
@@ -36,6 +36,10 @@ func (p *Pagination[T]) GetPage() int {
 func (pagination *Pagination[T]) Paginate(db *gorm.DB) *gorm.DB {
 	return db.Offset(pagination.GetOffset()).Limit(pagination.GetLimit())
 
+}
+
+func (pagination *Pagination[T]) PaginateRaw(query string) string {
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", query, pagination.GetLimit(), pagination.GetOffset())
 }
 
 func (pagination *Pagination[T]) Count(db *gorm.DB) {

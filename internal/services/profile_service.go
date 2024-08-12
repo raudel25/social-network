@@ -147,7 +147,7 @@ func (s *ProfileService) GetByRecommendationProfile(pagination *pkg.Pagination[m
 	WHERE profiles.deleted_at IS NULL`, jwt.ID, jwt.ID, jwt.ID)
 
 	pagination.CountRaw(s.db, query)
-	s.db.Raw(query).Scopes(pagination.Paginate).Scan(&recommendationProfiles)
+	s.db.Raw(pagination.PaginateRaw(query)).Scan(&recommendationProfiles)
 
 	var profiles []models.ProfileResponse
 

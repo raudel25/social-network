@@ -46,7 +46,7 @@ func postToResponsePost(id uint, post *models.Post) *models.PostResponse {
 	}
 }
 
-func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.PostResponse], jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
+func (s *PostService) getByRecommendationPost(pagination *pkg.Pagination[models.PostResponse], jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
 	var recommendationPosts []models.Post
 
 	query := fmt.Sprintf(`
@@ -55,11 +55,11 @@ func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.
 	WHERE 
 	EXISTS (SELECT 1 FROM follows WHERE follower_profile_id=%d AND followed_profile_id = profile_id)
 	AND 
-	NOT EXISTS (SELECT * FROM seen_posts WHERE profile_id=%d AND created_at < now() - interval '24 hours')`,
+	NOT EXISTS (SELECT * FROM seen_posts WHERE seen_posts.profile_id=%d AND seen_posts.post_id=posts.id AND created_at < now() - interval '24 hours')`,
 		jwt.ID, jwt.ID)
 
 	pagination.CountRaw(s.db, query)
-	s.db.Raw(query).Scopes(pagination.Paginate).Scan(&recommendationPosts)
+	s.db.Raw(pagination.PaginateRaw(query)).Scan(&recommendationPosts)
 
 	var posts []models.PostResponse
 
@@ -72,6 +72,28 @@ func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.
 	pagination.Rows = posts
 
 	return pkg.NewOk(pagination)
+}
+
+func (s *PostService) GetByRecommendationPost(pagination *pkg.Pagination[models.PostResponse], jwt *models.JWTDto) *pkg.ApiResponse[pkg.Pagination[models.PostResponse]] {
+	currentPage := s.getByRecommendationPost(pagination, jwt)
+
+	if !currentPage.Ok() || currentPage.Data.Page == 1 {
+		return currentPage
+	}
+
+	previewPage := s.getByRecommendationPost(&pkg.Pagination[models.PostResponse]{Page: currentPage.Data.Page - 1, Limit: currentPage.Data.Limit}, jwt)
+
+	if previewPage.Ok() {
+		for _, v := range previewPage.Data.Rows {
+			if s.db.Where("profile_id =? AND post_id =?", jwt.ID, v.ID).First(&models.SeenPost{}).Error == nil {
+				continue
+			}
+
+			s.db.Create(&models.SeenPost{ProfileID: jwt.ID, PostID: v.ID})
+		}
+	}
+
+	return currentPage
 }
 
 func (s *PostService) GetPostByID(id uint, jwt *models.JWTDto) *pkg.ApiResponse[models.PostResponse] {
