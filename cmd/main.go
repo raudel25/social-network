@@ -14,12 +14,14 @@ import (
 )
 
 func main() {
-	portPtr := flag.Int("port", 5000, "Default port is 8080")
+	portPtr := flag.Int("port", 5000, "Default port is 5000")
 	flag.Parse()
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading.env file: %s", err)
+	if os.Getenv("ENV") == "development" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("Error loading .env file: %s", err)
+		}
 	}
 
 	configModel := getConfig()
