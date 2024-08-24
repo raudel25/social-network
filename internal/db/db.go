@@ -42,7 +42,9 @@ func migrateDb(db *gorm.DB, model interface{}) {
 }
 
 func connectionString(config models.Config) string {
-
+	if len(config.ConnectionString) != 0 {
+		return config.ConnectionString
+	}
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password, config.Database.DBName)
 
